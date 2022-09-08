@@ -1,53 +1,68 @@
 plugins {
-    kotlin("multiplatform") version "1.7.10"
+  alias(libs.plugins.kotlin.multiplatform)
+  alias(libs.plugins.dokka)
+  `maven-publish`
 }
 
 group = "com.xemantic.osc"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 kotlin {
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        withJava()
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
+
+  jvm {
+    compilations.all {
+      kotlinOptions.jvmTarget = libs.versions.jvmTarget.get()
     }
-    js(BOTH) {
-        browser {
-            commonWebpackConfig {
-                cssSupport.enabled = true
-            }
-        }
+    testRuns["test"].executionTask.configure {
+      useJUnitPlatform()
     }
-    val hostOs = System.getProperty("os.name")
-    val isMingwX64 = hostOs.startsWith("Windows")
-    val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        isMingwX64 -> mingwX64("native")
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+  }
+
+  sourceSets {
+
+    val commonMain by getting {
+      dependencies {
+        // coroutine Flow is exposed by xemantic-state API
+        api(libs.kotlin.coroutines)
+      }
     }
 
-    
-    sourceSets {
-        val commonMain by getting
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
-        val jvmMain by getting
-        val jvmTest by getting
-        val jsMain by getting
-        val jsTest by getting
-        val nativeMain by getting
-        val nativeTest by getting
+    val commonTest by getting {
+      dependencies {
+        implementation(libs.kotlin.test)
+        implementation(libs.kotlin.coroutines.test)
+        implementation(libs.kotest)
+      }
     }
+
+    val jvmMain by getting {
+      dependencies {
+        implementation(libs.java.osc)
+        implementation(libs.kotlin.reflect)
+        implementation(libs.kotlin.logging)
+      }
+      configurations {
+        all {
+          exclude("log4j", "log4j")
+          exclude("org.slf4j", "slf4j-log4j12")
+        }
+      }
+    }
+
+    val jvmTest by getting
+
+  }
+}
+
+tasks.dokkaHtml {
+  dokkaSourceSets {
+    register("customSourceSet") {
+      sourceRoots.from(file("src/commonMain/kotlin"))
+      sourceRoots.from(file("src/jvmMain/kotlin"))
+    }
+  }
 }

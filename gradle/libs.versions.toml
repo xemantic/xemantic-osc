@@ -4,6 +4,7 @@ kotlinLanguage = "1.7"
 kotlin = "1.7.10"
 jvmTarget = "11"
 kotlinxCoroutines = "1.6.4"
+kotlinLogging = "2.1.23"
 
 javaOsc = "0.8"
 
@@ -15,6 +16,7 @@ kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", vers
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlin-logging = { module = "io.github.microutils:kotlin-logging", version.ref = "kotlinLogging" }
 java-osc = { module = "com.illposed.osc:javaosc-core", version.ref = "javaOsc" }
 
 jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
