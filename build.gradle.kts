@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.dokka)
   `maven-publish`
+  alias(libs.plugins.gradle.versions.plugin)
 }
 
 group = "com.xemantic.osc"
