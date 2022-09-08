@@ -1,0 +1,6 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="notice" value="xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support&#10;Copyright (C) &amp;#36;today.year Kazimierz Pogoda&#10;&#10;This file is part of xemantic-osc.&#10;&#10;xemantic-osc is free software: you can redistribute it and/or modify it under the terms of the&#10;GNU Lesser General Public License as published by the Free Software Foundation, either version 3&#10;of the License, or (at your option) any later version.&#10;&#10;xemantic-osc is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;&#10;without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.&#10;See the GNU Lesser General Public License for more details.&#10;&#10;You should have received a copy of the GNU Lesser General Public License along with xemantic-osc.&#10;If not, see &lt;https://www.gnu.org/licenses/&gt;." />
+    <option name="myName" value="LGPL" />
+  </copyright>
+</component>
