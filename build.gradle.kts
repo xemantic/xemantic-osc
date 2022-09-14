@@ -47,6 +47,9 @@ kotlin {
       dependencies {
         // coroutine Flow is exposed by xemantic-state API
         api(libs.kotlin.coroutines)
+        api(libs.ktor.io)
+        implementation(libs.ktor.network)
+        implementation(libs.kotlin.logging)
       }
     }
 
@@ -58,30 +61,18 @@ kotlin {
       }
     }
 
-    val jvmMain by getting {
-      dependencies {
-        implementation(libs.java.osc)
-        implementation(libs.kotlin.reflect)
-        implementation(libs.kotlin.logging)
-      }
-      configurations {
-        all {
-          exclude("log4j", "log4j")
-          exclude("org.slf4j", "slf4j-log4j12")
-        }
-      }
-    }
+    val jvmMain by getting
 
     val jvmTest by getting
 
   }
+
 }
 
 tasks.dokkaHtml {
   dokkaSourceSets {
     register("customSourceSet") {
       sourceRoots.from(file("src/commonMain/kotlin"))
-      sourceRoots.from(file("src/jvmMain/kotlin"))
     }
   }
 }
