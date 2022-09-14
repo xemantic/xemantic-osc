@@ -45,42 +45,52 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
   override val messageFlow: Flow<Osc.Message<*>> = flow {
     while (true) {
       val input = socket.incoming.receive()
-      println(Thread.currentThread().name)
       // client address
       val remoteAddress = input.address as InetSocketAddress
-      val packet = input.packet
-      val address = buildPacket {
-        packet.readUntilDelimiter(0, this)
-      }.readText()
-      packet.discardUntilDelimiter(','.code.toByte())
+      val message = input.packet.use { packet ->
+        val address = buildPacket {
+          packet.readUntilDelimiter(0, this)
+        }.readText()
 
-      val typeTag = buildPacket {
-        packet.readUntilDelimiter(0, this)
-      }.readText()
+        val maybeConverter = conversions[address]
+        if (maybeConverter == null) {
+          // TODO it should be logging
+          println("No converter registered for address: $address")
+          null
+        } else {
+          @Suppress("UNCHECKED_CAST")
+          val converter = maybeConverter as Osc.Converter<Any>
 
-      val padding = 0
-      packet.discard(padding)
+          packet.discardUntilDelimiter(COMMA_BYTE)
 
-      val maybeConverter = conversions[address]
-      if (maybeConverter == null) {
-        // TODO it should be logging
-        println("No converter registered for address: $address")
-        continue
+          val typeTag = buildPacket {
+            packet.readUntilDelimiter(0, this)
+          }.readText()
+
+          val padding = 4 - ((typeTag.length) % 4)
+          packet.discard(padding)
+
+          val value = converter.decode(typeTag, input.packet)
+
+          input.packet.close()
+
+          Osc.Message(
+            address = address,
+            value = value,
+            hostname = remoteAddress.hostname,
+            port = remoteAddress.port
+          )
+
+        }
+
       }
-      @Suppress("UNCHECKED_CAST")
-      val converter = maybeConverter as Osc.Converter<Any>
 
-      val value = converter.decode(typeTag, input.packet)
-      val message = Osc.Message(
-        address = address,
-        value = value,
-        hostname = remoteAddress.hostname,
-        port = remoteAddress.port
-      )
-
-      emit(message)
+      if (message != null) {
+        emit(message)
+      }
 
     }
+
   }
 
   override fun <V> valueFlow(address: String): Flow<V> = messageFlow
@@ -132,8 +142,7 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
       } as Osc.Converter<T>
       val packet = buildPacket {
         writeText(address)
-        writeByte(0)
-        val padding = 3 - (address.length % 4)
+        val padding = 4 - (address.length % 4)
         writeZeros(count = padding)
         converter.encode(value, this)
       }

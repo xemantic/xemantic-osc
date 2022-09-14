@@ -101,6 +101,8 @@ interface Osc : Closeable {
         encode = { x, output ->
           output.writeTypeTag("s")
           output.writeText(x)
+          val padding = 4 - ((x.length) % 4)
+          output.writeZeros(padding)
         },
         decode = { _, input ->
           input.readText()
@@ -195,7 +197,7 @@ class ConvertersBuilder {
 
   inline fun <reified T> convert(
     noinline encode: (x: T, output: io.ktor.utils.io.core.Output) -> Unit,
-    noinline decode: (tag: String, input: io.ktor.utils.io.core.Input) -> T
+    noinline decode: (tag: String, input: Input) -> T
   ) {
     convert(typeOf<T>(), encode, decode)
   }
@@ -212,15 +214,15 @@ class ConvertersBuilder {
 
 }
 
+const val COMMA_BYTE = ','.code.toByte()
+
 fun Output.writeTypeTag(tag: String) {
-  writeText(",")
+  writeByte(COMMA_BYTE)
   writeText(tag)
-  writeZeros(count = (tag.length + 1) % 4)
+  val padding = 4 - ((tag.length + 1) % 4)
+  writeZeros(count = padding)
 }
 
-internal fun Output.writeZeros(count: Int) {
-  repeat(count) {
-    writeByte(0)
-  }
-}
-
+internal fun Output.writeZeros(
+  count: Int
+) = fill(times = count.toLong(), 0)
