@@ -163,11 +163,11 @@ interface Osc : Closeable {
     val value: T,
     val hostname: String,
     val port: Int
-  )
+  ) : Packet
 
   data class Bundle(
     val packets: List<Packet>
-  )
+  ) : Packet
 
   fun output(build: Output.Builder.() -> Unit): Output
 
