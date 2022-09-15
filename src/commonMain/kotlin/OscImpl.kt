@@ -48,9 +48,8 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
       // client address
       val remoteAddress = input.address as InetSocketAddress
       val message = input.packet.use { packet ->
-        val address = buildPacket {
-          packet.readUntilDelimiter(0, this)
-        }.readText()
+
+        val address = packet.readTextUntilZero()
 
         val maybeConverter = conversions[address]
         if (maybeConverter == null) {
@@ -63,10 +62,7 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
 
           packet.discardUntilDelimiter(COMMA_BYTE)
 
-          val typeTag = buildPacket {
-            packet.readUntilDelimiter(0, this)
-          }.readText()
-
+          val typeTag = packet.readTextUntilZero()
           val padding = 4 - ((typeTag.length) % 4)
           packet.discard(padding)
 
@@ -158,3 +154,7 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
   }
 
 }
+
+private fun Input.readTextUntilZero(): String = buildPacket {
+  readUntilDelimiter(0, this)
+}.readText()
