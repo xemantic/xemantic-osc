@@ -61,7 +61,11 @@ kotlin {
       }
     }
 
-    val jvmMain by getting
+    val jvmMain by getting {
+      dependencies {
+        implementation(libs.slf4j.simple)
+      }
+    }
 
     val jvmTest by getting
 
