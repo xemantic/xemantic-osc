@@ -27,22 +27,23 @@ interface Osc : Closeable {
 
   abstract class ConversionBuilder {
 
-    abstract val establishedConverters: Map<KType, Osc.Converter<*>>
+    private val conversions = mutableListOf<Pair<String, KType>>()
 
     inline fun <reified T> conversion(address: String) {
       conversion(address, typeOf<T>())
     }
 
     fun conversion(address: String, type: KType) {
-      _conversions[address] = requireNotNull(establishedConverters[type]) {
-        "No converter for type: $type"
-      }
+      conversions.add(Pair(address, type))
     }
 
-    val conversions: Map<String, Osc.Converter<*>>
-      get() = _conversions
-
-    private val _conversions = mutableMapOf<String, Osc.Converter<*>>()
+    internal fun buildConversions(
+      converters: Map<KType, Converter<*>>
+    ): Map<String, Osc.Converter<*>> = conversions.toMap().mapValues {
+      requireNotNull(converters[it.value]) {
+        "No converter for type: $it.se"
+      }
+    }
 
   }
 
@@ -100,9 +101,7 @@ interface Osc : Closeable {
       convert<String>(
         encode = { x, output ->
           output.writeTypeTag("s")
-          output.writeText(x)
-          val padding = 4 - ((x.length) % 4)
-          output.writeZeros(padding)
+          output.writeOscString(x)
         },
         decode = { _, input ->
           input.readText()
@@ -110,9 +109,6 @@ interface Osc : Closeable {
       )
 
     }
-
-    override val establishedConverters: Map<KType, Converter<*>>
-      get() = converters
 
   }
 
@@ -126,15 +122,11 @@ interface Osc : Closeable {
 
   interface Output : Closeable {
 
-    class Builder(
-      converters: Map<KType, Converter<*>>
-    ) : ConversionBuilder() {
+    class Builder : ConversionBuilder() {
 
       var hostname: String = "localhost"
 
       var port: Int = 0
-
-      override val establishedConverters: Map<KType, Converter<*>> = converters
 
     }
 
@@ -216,6 +208,10 @@ class ConvertersBuilder {
 
 const val COMMA_BYTE = ','.code.toByte()
 
+fun Input.readOscString(): String = buildPacket {
+  readUntilDelimiter(0, this)
+}.readText()
+
 fun Output.writeTypeTag(tag: String) {
   writeByte(COMMA_BYTE)
   writeText(tag)
@@ -223,6 +219,12 @@ fun Output.writeTypeTag(tag: String) {
   writeZeros(count = padding)
 }
 
-internal fun Output.writeZeros(
+fun Output.writeOscString(value: String) {
+  writeText(value)
+  val padding = 4 - ((value.length) % 4)
+  writeZeros(padding)
+}
+
+fun Output.writeZeros(
   count: Int
 ) = fill(times = count.toLong(), 0)

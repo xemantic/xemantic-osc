@@ -61,19 +61,25 @@ class OscTest {
           }
         }
         delay(1)
-        osc.output {
-          port = osc.port
-          conversion<Double>("/entity/double")
-          conversion<Float>("/entity/float")
-        }.use { output ->
-          output.send("/entity/double", 42.0)
-          output.send("/entity/float", 4242.0)
+        // technically we could use the same osc port for input and output
+        // but let's make it more similar to actual use case
+        osc {}.use { clientOsc ->
+          clientOsc.output {
+            port = osc.port
+            conversion<Double>("/entity/double")
+            conversion<Float>("/entity/float")
+          }.use { output ->
+            output.send("/entity/double", 42.0)
+            output.send("/entity/float", 4242.0)
+          }
         }
         delay(1)
         job.cancelAndJoin()
 
         receivedMessages shouldHaveSize 2
+        receivedMessages[0].value is Double
         receivedMessages[0].value shouldBe 42.0
+        receivedMessages[1].value is Float
         receivedMessages[1].value shouldBe 4242.0f
       }
     }

@@ -23,11 +23,14 @@ import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import mu.KotlinLogging
 
 internal class UdpOsc(builder: Osc.Builder) : Osc {
 
+  private val logger = KotlinLogging.logger {}
+
   private val converters = builder.converters
-  private val conversions = builder.conversions
+  private val conversions = builder.buildConversions(converters)
 
   private val selectorManager = SelectorManager(Dispatchers.IO)
   private val socket = aSocket(selectorManager).udp().bind(
@@ -42,19 +45,25 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
   // defensive copy prevents ConcurrentModificationException
   override val outputs: List<Osc.Output> get() = _outputs.toList()
 
+  init {
+    logger.info { "OSC port open: udp://${socket.localAddress}" }
+  }
+
   override val messageFlow: Flow<Osc.Message<*>> = flow {
+    logger.info {
+      "Flowing OSC messages sent to udp://${socket.localAddress}"
+    }
     while (true) {
       val input = socket.incoming.receive()
       // client address
       val remoteAddress = input.address as InetSocketAddress
       val message = input.packet.use { packet ->
 
-        val address = packet.readTextUntilZero()
+        val address = packet.readOscString()
 
         val maybeConverter = conversions[address]
         if (maybeConverter == null) {
-          // TODO it should be logging
-          println("No converter registered for address: $address")
+          logger.error { "No conversion registered for address: $address" }
           null
         } else {
           @Suppress("UNCHECKED_CAST")
@@ -62,13 +71,15 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
 
           packet.discardUntilDelimiter(COMMA_BYTE)
 
-          val typeTag = packet.readTextUntilZero()
+          val typeTag = packet.readOscString()
           val padding = 4 - ((typeTag.length) % 4)
           packet.discard(padding)
 
           val value = converter.decode(typeTag, input.packet)
 
-          input.packet.close()
+          logger.debug {
+            "OSC Message IN: udp://$remoteAddress -> $address=$value"
+          }
 
           Osc.Message(
             address = address,
@@ -81,6 +92,7 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
 
       }
 
+      // emitting message only after closing the packet
       if (message != null) {
         emit(message)
       }
@@ -99,12 +111,12 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
   override fun output(
     build: Osc.Output.Builder.() -> Unit
   ): Osc.Output {
-    val builder = Osc.Output.Builder(converters)
+    val builder = Osc.Output.Builder()
     build(builder)
     return UdpOscOutput(
       builder.hostname,
       builder.port,
-      builder.conversions
+      builder.buildConversions(converters)
     )
   }
 
@@ -128,7 +140,9 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
     override val port = socketAddress.port
 
     override suspend fun send(packet: Osc.Packet) {
-      throw NotImplementedError() // TODO fix it
+      // it should be relatively easy to add
+      // only OSC time tag and scheduling require some analysis
+      throw NotImplementedError("OSC Packet is not supported")
     }
 
     override suspend fun <T> send(address: String, value: T) {
@@ -136,6 +150,9 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
       val converter = requireNotNull(conversions[address]) {
         "No converter registered for address: $address"
       } as Osc.Converter<T>
+      logger.debug {
+        "OSC Message OUT: udp://$socketAddress$address=$value"
+      }
       val packet = buildPacket {
         writeText(address)
         val padding = 4 - (address.length % 4)
@@ -154,7 +171,3 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
   }
 
 }
-
-private fun Input.readTextUntilZero(): String = buildPacket {
-  readUntilDelimiter(0, this)
-}.readText()
