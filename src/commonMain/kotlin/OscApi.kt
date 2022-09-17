@@ -41,7 +41,7 @@ interface Osc : Closeable {
       converters: Map<KType, Converter<*>>
     ): Map<String, Osc.Converter<*>> = conversions.toMap().mapValues {
       requireNotNull(converters[it.value]) {
-        "No converter for type: $it"
+        "Cannot convert ${it.key} because there is no converter for type: ${it.value}"
       }
     }
 
