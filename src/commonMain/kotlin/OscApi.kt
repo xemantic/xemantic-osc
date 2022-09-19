@@ -134,12 +134,12 @@ interface Osc : Closeable {
 
     val port: Int
 
-    suspend fun send(packet: Packet)
+    fun send(packet: Packet)
 
     /**
      * @throws IllegalArgumentException if no converter was registered for the [address].
      */
-    suspend fun <T> send(address: String, value: T)
+    fun <T> send(address: String, value: T)
 
   }
 

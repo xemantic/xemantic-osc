@@ -17,13 +17,11 @@
  */
 package com.xemantic.osc
 
+import io.kotest.matchers.collections.containExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.ktor.utils.io.core.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
 import kotlin.io.use
 import kotlin.test.Test
@@ -43,44 +41,60 @@ class OscTest {
     floatTag shouldBe byteArrayOf(COMMA_BYTE, FLOAT_BYTE, 0, 0)
     vec2Tag shouldBe byteArrayOf(COMMA_BYTE, FLOAT_BYTE, FLOAT_BYTE, 0)
     vec3Tag shouldBe byteArrayOf(COMMA_BYTE, FLOAT_BYTE, FLOAT_BYTE, FLOAT_BYTE, 0, 0, 0, 0)
-    vec4Tag shouldBe byteArrayOf(COMMA_BYTE, FLOAT_BYTE, FLOAT_BYTE, FLOAT_BYTE, FLOAT_BYTE, 0, 0, 0)
+    vec4Tag shouldBe byteArrayOf(
+      COMMA_BYTE,
+      FLOAT_BYTE,
+      FLOAT_BYTE,
+      FLOAT_BYTE,
+      FLOAT_BYTE,
+      0,
+      0,
+      0
+    )
   }
 
   @Test
   fun shouldSendAndReceiveOscMessages() {
-    // given
+
     osc {
       conversion<Double>("/entity/double")
       conversion<Float>("/entity/float")
     }.use { osc ->
-      val receivedMessages = mutableListOf<Osc.Message<*>>()
-      runTest {
-        val job = launch {
-          osc.messageFlow.collect {
-            receivedMessages.add(it)
-          }
-        }
-        delay(1)
-        // technically we could use the same osc port for input and output
-        // but let's make it more similar to actual use case
-        osc {}.use { clientOsc ->
-          clientOsc.output {
-            port = osc.port
-            conversion<Double>("/entity/double")
-            conversion<Float>("/entity/float")
-          }.use { output ->
-            output.send("/entity/double", 42.0)
-            output.send("/entity/float", 4242.0)
-          }
-        }
-        delay(1)
-        job.cancelAndJoin()
 
-        receivedMessages shouldHaveSize 2
-        receivedMessages[0].value is Double
-        receivedMessages[0].value shouldBe 42.0
-        receivedMessages[1].value is Float
-        receivedMessages[1].value shouldBe 4242.0f
+      // technically we could use the same osc port for input and output
+      // but let's make it more similar to actual use case
+      osc {}.use { clientOsc ->
+        clientOsc.output {
+          port = osc.port
+          conversion<Double>("/entity/double")
+          conversion<Float>("/entity/float")
+        }.use { output ->
+
+          runTest {
+            val receivedMessages = mutableListOf<Osc.Message<*>>()
+
+            val job = launch {
+              osc.messageFlow.collect {
+                receivedMessages.add(it)
+                if (receivedMessages.size == 2) {
+                  coroutineContext.job.cancel()
+                }
+              }
+            }
+
+            output.send("/entity/double", 42.0)
+            output.send("/entity/float", 4242.0f)
+
+            job.join()
+
+            receivedMessages shouldHaveSize 2
+            // slight packet reordering might happen
+            receivedMessages.map { it.value } shouldBe containExactlyInAnyOrder(
+              42.0,
+              4242.0f
+            )
+          }
+        }
       }
     }
   }

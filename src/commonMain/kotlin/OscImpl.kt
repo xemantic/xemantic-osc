@@ -21,13 +21,15 @@ package com.xemantic.osc
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import mu.KotlinLogging
 
 internal class UdpOsc(builder: Osc.Builder) : Osc {
 
   private val logger = KotlinLogging.logger {}
+
+  private val scope = CoroutineScope(Dispatchers.IO)
 
   private val converters = builder.converters
   private val conversions = builder.buildConversions(converters)
@@ -46,12 +48,12 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
   override val outputs: List<Osc.Output> get() = _outputs.toList()
 
   init {
-    logger.info { "OSC port open: udp://${socket.localAddress}" }
+    logger.info { "OSC port open: udp:${socket.localAddress}" }
   }
 
-  override val messageFlow: Flow<Osc.Message<*>> = flow {
+  override val messageFlow = flow {
     logger.info {
-      "Flowing OSC messages sent to udp://${socket.localAddress}"
+      "Flowing OSC messages sent to udp:${socket.localAddress}"
     }
     while (true) {
       val input = socket.incoming.receive()
@@ -78,7 +80,7 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
           val value = converter.decode(typeTag, input.packet)
 
           logger.debug {
-            "OSC Message IN: udp://$remoteAddress -> $address=$value"
+            "OSC Message IN: udp:$remoteAddress -> $address=$value"
           }
 
           Osc.Message(
@@ -98,15 +100,15 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
       }
 
     }
+  }.shareIn(scope, SharingStarted.WhileSubscribed())
 
-  }
-
-  override fun <V> valueFlow(address: String): Flow<V> = messageFlow
-    .filter { it.address.startsWith(address) }
-    .map {
-      @Suppress("UNCHECKED_CAST")
-      it.value as V
-    }
+  override fun <V> valueFlow(address: String) =
+    messageFlow
+      .filter { it.address.startsWith(address) }
+      .map {
+        @Suppress("UNCHECKED_CAST")
+        it.value as V
+      }
 
   override fun output(
     build: Osc.Output.Builder.() -> Unit
@@ -125,6 +127,7 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
       it.close()
     }
     socket.close()
+    scope.cancel()
   }
 
   override fun toString() = "Osc[upd:${socket.localAddress}]"
@@ -139,34 +142,38 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
     override val hostname = socketAddress.hostname
     override val port = socketAddress.port
 
-    override suspend fun send(packet: Osc.Packet) {
+    override fun send(packet: Osc.Packet) {
       // it should be relatively easy to add
       // only OSC time tag and scheduling require some analysis
       throw NotImplementedError("OSC Packet is not supported")
     }
 
-    override suspend fun <T> send(address: String, value: T) {
-      @Suppress("UNCHECKED_CAST")
-      val converter = requireNotNull(conversions[address]) {
-        "No converter registered for address: $address"
-      } as Osc.Converter<T>
-      logger.debug {
-        "OSC Message OUT: udp://$socketAddress$address=$value"
+    override fun <T> send(address: String, value: T) {
+      // sometimes slight reordering of packets might happen
+      scope.launch {
+        @Suppress("UNCHECKED_CAST")
+        val converter = requireNotNull(conversions[address]) {
+          "No converter registered for address: $address"
+        } as Osc.Converter<T>
+        logger.debug {
+          "OSC Message OUT: udp:$socketAddress$address=$value"
+        }
+        val packet = buildPacket {
+          writeText(address)
+          val padding = 4 - (address.length % 4)
+          writeZeros(count = padding)
+          converter.encode(value, this)
+        }
+        socket.send(Datagram(packet, socketAddress))
       }
-      val packet = buildPacket {
-        writeText(address)
-        val padding = 4 - (address.length % 4)
-        writeZeros(count = padding)
-        converter.encode(value, this)
-      }
-      socket.send(Datagram(packet, socketAddress))
     }
 
     override fun close() {
       _outputs.remove(this)
     }
 
-    override fun toString() = "Osc.Output[upd:${socket.localAddress}->udp:$socketAddress]"
+    override fun toString() =
+      "Osc.Output[upd:${socket.localAddress}->udp:$socketAddress]"
 
   }
 
