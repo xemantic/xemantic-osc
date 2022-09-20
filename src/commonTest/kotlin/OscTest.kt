@@ -56,18 +56,47 @@ class OscTest {
   @Test
   fun shouldSendAndReceiveOscMessages() {
 
-    osc {
+    fun Osc.ConversionBuilder.testConversions() {
       conversion<Double>("/entity/double")
       conversion<Float>("/entity/float")
+      conversion<String>("/entity/string")
+      conversion<Boolean>("/entity/boolean")
+      conversion<List<String>>("/entity/listOfStrings")
+    }
+
+    val testConverters = converters {
+      convert<List<String>>(
+        encode = { x, output ->
+          val typeTag = "s".repeat(x.size)
+          output.writeTypeTag(typeTag)
+          x.forEach {
+            output.writeOscString(it)
+          }
+        },
+        decode = { tag, input ->
+          buildList(tag.length) {
+            repeat(tag.length) {
+              add(input.readOscString())
+            }
+          }
+        }
+      )
+    }
+
+    osc {
+      testConversions()
+      converters += testConverters
     }.use { osc ->
 
       // technically we could use the same osc port for input and output
       // but let's make it more similar to actual use case
-      osc {}.use { clientOsc ->
+      osc {
+        testConversions()
+        converters += testConverters
+      }.use { clientOsc ->
         clientOsc.output {
           port = osc.port
-          conversion<Double>("/entity/double")
-          conversion<Float>("/entity/float")
+          testConversions()
         }.use { output ->
 
           runTest {
@@ -76,7 +105,7 @@ class OscTest {
             val job = launch {
               osc.messageFlow.collect {
                 receivedMessages.add(it)
-                if (receivedMessages.size == 2) {
+                if (receivedMessages.size == 6) {
                   coroutineContext.job.cancel()
                 }
               }
@@ -84,14 +113,22 @@ class OscTest {
 
             output.send("/entity/double", 42.0)
             output.send("/entity/float", 4242.0f)
+            output.send("/entity/string", "foo")
+            output.send("/entity/boolean", true)
+            output.send("/entity/boolean", false)
+            output.send("/entity/listOfStrings", listOf("bar", "buzz"))
 
             job.join()
 
-            receivedMessages shouldHaveSize 2
+            receivedMessages shouldHaveSize 6
             // slight packet reordering might happen
             receivedMessages.map { it.value } shouldBe containExactlyInAnyOrder(
               42.0,
-              4242.0f
+              4242.0f,
+              "foo",
+              true,
+              false,
+              listOf("bar", "buzz")
             )
           }
         }

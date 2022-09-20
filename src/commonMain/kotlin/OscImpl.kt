@@ -23,16 +23,21 @@ import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import mu.KLogger
 import mu.KotlinLogging
+import kotlin.reflect.KType
 
 internal class UdpOsc(builder: Osc.Builder) : Osc {
 
   private val logger = KotlinLogging.logger {}
 
-  private val scope = CoroutineScope(Dispatchers.IO)
+  override val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
   private val converters = builder.converters
-  private val conversions = builder.buildConversions(converters)
+  init {
+    logConverters(logger, "General/INPUT", converters)
+  }
+  private val conversions = builder.buildConversions(logger)
 
   private val selectorManager = SelectorManager(Dispatchers.IO)
   private val socket = aSocket(selectorManager).udp().bind(
@@ -73,13 +78,10 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
 
           packet.discardUntilDelimiter(COMMA_BYTE)
 
-          val typeTag = packet.readOscString()
-          val padding = 4 - ((typeTag.length) % 4)
-          packet.discard(padding)
-
+          val typeTag = packet.readOscString().removePrefix(",")
           val value = converter.decode(typeTag, input.packet)
 
-          logger.debug {
+          logger.trace {
             "OSC Message IN: udp:$remoteAddress -> $address=$value"
           }
 
@@ -100,7 +102,10 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
       }
 
     }
-  }.shareIn(scope, SharingStarted.WhileSubscribed())
+  }.shareIn(
+    coroutineScope,
+    SharingStarted.WhileSubscribed()
+  )
 
   override fun <V> valueFlow(address: String) =
     messageFlow
@@ -113,13 +118,9 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
   override fun output(
     build: Osc.Output.Builder.() -> Unit
   ): Osc.Output {
-    val builder = Osc.Output.Builder()
+    val builder = Osc.Output.Builder(converters)
     build(builder)
-    return UdpOscOutput(
-      builder.hostname,
-      builder.port,
-      builder.buildConversions(converters)
-    )
+    return UdpOscOutput(builder)
   }
 
   override fun close() {
@@ -127,20 +128,31 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
       it.close()
     }
     socket.close()
-    scope.cancel()
+    coroutineScope.cancel()
   }
 
   override fun toString() = "Osc[upd:${socket.localAddress}]"
 
   inner class UdpOscOutput(
-    hostname: String,
-    port: Int,
-    private val conversions: Map<String, Osc.Converter<*>>
+    builder: Osc.Output.Builder
   ) : Osc.Output {
 
-    private val socketAddress = InetSocketAddress(hostname, port)
+    private val logger = KotlinLogging.logger(
+      UdpOscOutput::class.qualifiedName!!
+    )
+
+    private val socketAddress = InetSocketAddress(
+      builder.hostname,
+      builder.port
+    )
+
     override val hostname = socketAddress.hostname
     override val port = socketAddress.port
+
+    init {
+      logConverters(logger, "OUTPUT", builder.converters)
+    }
+    private val conversions = builder.buildConversions(logger)
 
     override fun send(packet: Osc.Packet) {
       // it should be relatively easy to add
@@ -150,18 +162,16 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
 
     override fun <T> send(address: String, value: T) {
       // sometimes slight reordering of packets might happen
-      scope.launch {
+      coroutineScope.launch {
         @Suppress("UNCHECKED_CAST")
         val converter = requireNotNull(conversions[address]) {
           "No converter registered for address: $address"
         } as Osc.Converter<T>
-        logger.debug {
+        logger.trace {
           "OSC Message OUT: udp:$socketAddress$address=$value"
         }
         val packet = buildPacket {
-          writeText(address)
-          val padding = 4 - (address.length % 4)
-          writeZeros(count = padding)
+          writeOscString(address)
           converter.encode(value, this)
         }
         socket.send(Datagram(packet, socketAddress))
@@ -177,4 +187,17 @@ internal class UdpOsc(builder: Osc.Builder) : Osc {
 
   }
 
+}
+
+fun logConverters(
+  logger: KLogger,
+  category: String,
+  converters: Map<KType, Osc.Converter<*>>
+) {
+  if (logger.isDebugEnabled) {
+    logger.debug { "$category converters registered for types:" }
+    converters.forEach {
+      logger.debug { "  * ${it.key}" }
+    }
+  }
 }

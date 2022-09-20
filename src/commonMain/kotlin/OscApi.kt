@@ -19,7 +19,9 @@
 package com.xemantic.osc
 
 import io.ktor.utils.io.core.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import mu.KLogger
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
@@ -27,7 +29,11 @@ interface Osc : Closeable {
 
   abstract class ConversionBuilder {
 
+    abstract val direction: String
+
     private val conversions = mutableListOf<Pair<String, KType>>()
+
+    abstract var converters: Map<KType, Converter<*>>
 
     inline fun <reified T> conversion(address: String) {
       conversion(address, typeOf<T>())
@@ -38,10 +44,16 @@ interface Osc : Closeable {
     }
 
     internal fun buildConversions(
-      converters: Map<KType, Converter<*>>
-    ): Map<String, Osc.Converter<*>> = conversions.toMap().mapValues {
-      requireNotNull(converters[it.value]) {
-        "Cannot convert ${it.key} because there is no converter for type: ${it.value}"
+      logger: KLogger
+    ): Map<String, Osc.Converter<*>> {
+      logger.debug {
+        "$direction conversions:"
+      }
+      return conversions.toMap().mapValues {
+        logger.debug { "  * ${it.key} ${it.value}" }
+        requireNotNull(converters[it.value]) {
+          "Cannot convert ${it.key} because there is no converter for type: ${it.value}"
+        }
       }
     }
 
@@ -49,11 +61,13 @@ interface Osc : Closeable {
 
   class Builder : ConversionBuilder() {
 
+    override val direction = "INPUT"
+
     var hostname: String = "0.0.0.0"
 
     var port: Int = 0
 
-    var converters: Map<KType, Converter<*>> = converters {
+    override var converters: Map<KType, Converter<*>> = converters {
 
       convert<Float>(
         encode = { x, output ->
@@ -67,7 +81,10 @@ interface Osc : Closeable {
 
       convert<Boolean>(
         encode = { x, output ->
-          output.writeText(if (x) "T" else "F")
+          output.writeTypeTag(
+            if (x) "T"
+            else "F"
+          )
         },
         decode = { tag, _ ->
           when (tag) {
@@ -80,11 +97,11 @@ interface Osc : Closeable {
 
       convert<Double>(
         encode = { x, output ->
-          output.writeTypeTag("f")
-          output.writeFloat(x.toFloat())
+          output.writeTypeTag("d")
+          output.writeDouble(x)
         },
         decode = { _, input ->
-          input.readFloat().toDouble()
+          input.readDouble()
         }
       )
 
@@ -104,13 +121,15 @@ interface Osc : Closeable {
           output.writeOscString(x)
         },
         decode = { _, input ->
-          input.readText()
+          input.readOscString()
         }
       )
 
     }
 
   }
+
+  val coroutineScope: CoroutineScope
 
   val hostname: String
 
@@ -122,7 +141,13 @@ interface Osc : Closeable {
 
   interface Output : Closeable {
 
-    class Builder : ConversionBuilder() {
+    class Builder(
+      parentConverters: Map<KType, Converter<*>>
+    ) : ConversionBuilder() {
+
+      override val direction = "OUTPUT"
+
+      override var converters = parentConverters
 
       var hostname: String = "localhost"
 
@@ -210,6 +235,8 @@ const val COMMA_BYTE = ','.code.toByte()
 
 fun Input.readOscString(): String = buildPacket {
   readUntilDelimiter(0, this)
+  val padding = 4 - ((size) % 4)
+  discard(padding)
 }.readText()
 
 fun Output.writeTypeTag(tag: String) {
