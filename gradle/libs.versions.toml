@@ -4,8 +4,8 @@ kotlinLanguage = "1.7"
 kotlin = "1.7.10"
 jvmTarget = "11"
 kotlinxCoroutines = "1.6.4"
-kotlinLogging = "2.1.23"
-slf4j = "2.0.1"
+kotlinLogging = "3.0.0"
+slf4j = "2.0.2"
 
 ktor = "2.1.1"
 
