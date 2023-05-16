@@ -16,67 +16,51 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-  alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.dokka)
-  `maven-publish`
+  alias(libs.plugins.kotlin.multiplatform) apply false
+  id("maven-publish")
   alias(libs.plugins.gradle.versions.plugin)
 }
 
-group = "com.xemantic.osc"
-version = "1.0-SNAPSHOT"
+allprojects {
 
-repositories {
-  mavenCentral()
-}
+  group = "com.xemantic.osc"
+  version = "2.0-SNAPSHOT"
 
-kotlin {
-
-  jvm {
-    compilations.all {
-      kotlinOptions.jvmTarget = libs.versions.jvmTarget.get()
-    }
-    testRuns["test"].executionTask.configure {
-      useJUnitPlatform()
-    }
-  }
-
-  sourceSets {
-
-    val commonMain by getting {
-      dependencies {
-        // coroutine Flow is exposed by xemantic-state API
-        api(libs.kotlin.coroutines)
-        api(libs.ktor.io)
-        implementation(libs.ktor.network)
-        implementation(libs.kotlin.logging)
-      }
-    }
-
-    val commonTest by getting {
-      dependencies {
-        implementation(libs.kotlin.test)
-        implementation(libs.kotlin.coroutines.test)
-        implementation(libs.kotest)
-      }
-    }
-
-    val jvmMain by getting {
-      dependencies {
-        implementation(libs.slf4j.simple)
-      }
-    }
-
-    val jvmTest by getting
-
+  repositories {
+    mavenCentral()
+    mavenLocal()
   }
 
 }
 
-tasks.dokkaHtml {
-  dokkaSourceSets {
-    register("customSourceSet") {
-      sourceRoots.from(file("src/commonMain/kotlin"))
+tasks.dokkaHtmlMultiModule.configure {
+  outputDirectory.set(buildDir.resolve("dokkaCustomMultiModuleOutput"))
+}
+
+subprojects {
+
+  apply {
+    plugin("kotlin-multiplatform")
+    plugin("maven-publish")
+    plugin("org.jetbrains.dokka")
+  }
+
+  tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets {
+      register("customSourceSet") {
+        sourceRoots.from(file("src/commonMain/kotlin"))
+        sourceRoots.from(file("src/jvmMain/kotlin"))
+      }
     }
   }
+
+  tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = libs.versions.jvmTarget.get()
+  }
+
 }

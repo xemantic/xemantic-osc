@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2022 Kazimierz Pogoda
+ * Copyright (C) 2023 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,10 +16,35 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-rootProject.name = "xemantic-osc"
+package com.xemantic.osc.ktor
 
-include(
-  "xemantic-osc-api",
-  "xemantic-osc-udp",
-  "xemantic-osc-demo"
-)
+import io.ktor.utils.io.core.*
+
+const val COMMA = ','.code.toByte()
+
+// TODO it seems to belong to implementation more
+fun Input.readOscString(): String = buildPacket {
+  readUntilDelimiter(0, this)
+  val padding = 4 - ((size) % 4)
+  discard(padding)
+}.readText()
+
+fun Output.writeOscTypeTag(tag: String) {
+  require(tag.isNotBlank()) {
+    "tag cannot be blank"
+  }
+  writeByte(COMMA)
+  writeText(tag)
+  val padding = 4 - ((tag.length + 1) % 4)
+  writeZeros(count = padding)
+}
+
+fun Output.writeOscString(value: String) {
+  writeText(value)
+  val padding = 4 - ((value.length) % 4)
+  writeZeros(padding)
+}
+
+fun Output.writeZeros(
+  count: Int
+) = fill(times = count.toLong(), 0)

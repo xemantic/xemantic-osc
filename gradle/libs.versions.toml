@@ -1,18 +1,19 @@
 [versions]
-kotlinApi = "1.7"
-kotlinLanguage = "1.7"
-kotlin = "1.7.10"
+kotlinApi = "1.8"
+kotlinLanguage = "1.8"
+kotlin = "1.8.21"
+dokka = "1.8.10"
 jvmTarget = "11"
 kotlinxCoroutines = "1.6.4"
 kotlinLogging = "3.0.0"
-slf4j = "2.0.2"
+slf4j = "2.0.7"
 
-ktor = "2.1.1"
+ktor = "2.3.0"
 
-kotest = "5.4.2"
+kotest = "5.6.1"
 junitJupiter = "5.9.0"
 
-gradleVersionsPlugin = "0.42.0"
+gradleVersionsPlugin = "0.46.0"
 
 [libraries]
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
@@ -28,9 +29,9 @@ slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4
 
 jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
 jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
-kotest = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-dokka = { id = "org.jetbrains.dokka", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 gradle-versions-plugin = { id = "com.github.ben-manes.versions", version.ref = "gradleVersionsPlugin" }

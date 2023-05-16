@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2022 Kazimierz Pogoda
+ * Copyright (C) 2023 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -15,11 +15,20 @@
  * You should have received a copy of the GNU Lesser General Public License along with xemantic-osc.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+package com.xemantic.osc.demo
 
-rootProject.name = "xemantic-osc"
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import com.xemantic.osc.udp.OscUdp
 
-include(
-  "xemantic-osc-api",
-  "xemantic-osc-udp",
-  "xemantic-osc-demo"
-)
+fun main() {
+  UdpOsc(
+    router = complexOscRouter(),
+    dispatcher = Dispatchers.Main,
+    port = 40001
+  ).use { osc ->
+    runBlocking {
+      osc.start()
+    }
+  }
+}

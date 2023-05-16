@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2022 Kazimierz Pogoda
+ * Copyright (C) 2023 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -15,11 +15,39 @@
  * You should have received a copy of the GNU Lesser General Public License along with xemantic-osc.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+package com.xemantic.osc.demo
 
-rootProject.name = "xemantic-osc"
+/*
+fun main() {
 
-include(
-  "xemantic-osc-api",
-  "xemantic-osc-udp",
-  "xemantic-osc-demo"
-)
+  val osc = Osc(
+    UpdOsc(port = 40001),
+    TcpOsc(port = 40002),
+    OscQuery(port = 8080)
+  )
+
+  runBlocking {
+    osc.flow<Int>(pattern("/Note([0-9]){,2}")).
+
+    }
+    osc.flow(pattern("/Note([0-9]){,2}"))
+      .map { _, message ->
+      }
+      .stateIn(scope = this)
+      .withLatestFrom {
+
+      }
+  }
+
+  val noteFlow =
+
+  osc.flow(pattern("/Velocity([0-9]){,2}")) { address, note, message ->
+
+  }.withLatestFrom(noteFlow) {
+
+  }.collect {
+    println("note")
+  }
+
+}
+*/
