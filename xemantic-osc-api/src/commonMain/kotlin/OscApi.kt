@@ -139,18 +139,17 @@ class OscInput(
     }
   }
 
-  val messageFlow: Flow<OscMessage<*>> = flow {
+  private val _messages = MutableSharedFlow<OscMessage<*>>() // private mutable shared flow
+  val messages = _messages.asSharedFlow() // publicly exposed as read-only shared flow
 
-  }
+//  inline fun <reified T> flow(address: String): Flow<T> {
+//    route<T>(address)
+//    return messageFlow
+//      .filter { it.address == address }
+//      .map { it.value as T }
+//  }
 
-  inline fun <reified T> flow(address: String): Flow<T> {
-    route<T>(address)
-    return messageFlow
-      .filter { it.address == address }
-      .map { it.value as T }
-  }
-
-  fun handle(peer: OscPeer, input: Input) {
+  suspend fun handle(peer: OscPeer, input: Input) {
     val address = input.readOscString()
     if (address == "[bundle]") { // TODO check with protocol
       throw UnsupportedOperationException("bundle still not implemented")
@@ -176,7 +175,7 @@ class OscInput(
     }
   }
 
-  private fun <T> handleRoute(
+  private suspend fun <T> handleRoute(
     peer: OscPeer,
     address: String,
     input: Input,
@@ -204,6 +203,8 @@ class OscInput(
         val action = route.action
         action(message)
       }
+
+      _messages.emit(message)
     }
   }
 

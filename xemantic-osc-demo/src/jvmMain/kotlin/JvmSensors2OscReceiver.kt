@@ -21,6 +21,7 @@ import UdpOsc
 import com.xemantic.osc.OscMessage
 import com.xemantic.osc.OscInput
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 
@@ -95,7 +96,14 @@ fun main() {
     port = 40001
   ).use { osc ->
     runBlocking(Dispatchers.IO) {
+      launch {
+        input.messages.collect {
+          logger.debug { "Message received: $it" }
+        }
+      }
       osc.start()
+
+
 //      osc.messageFlow
 //        filter {
 //        }
