@@ -1,14 +1,12 @@
 [versions]
-kotlinApi = "1.8"
-kotlinLanguage = "1.8"
 kotlin = "1.8.21"
 dokka = "1.8.10"
 jvmTarget = "11"
 kotlinxCoroutines = "1.7.1"
-kotlinLogging = "3.0.0"
+kotlinLogging = "3.0.5"
 slf4j = "2.0.7"
 
-ktor = "2.3.0"
+ktor = "2.3.1"
 
 kotest = "5.6.2"
 junitJupiter = "5.9.0"
