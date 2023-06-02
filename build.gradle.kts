@@ -17,6 +17,7 @@
  */
 
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -25,6 +26,8 @@ plugins {
   id("maven-publish")
   alias(libs.plugins.gradle.versions.plugin)
 }
+
+val jvmVersion = JvmTarget.fromTarget(libs.versions.jvmTarget.get())
 
 allprojects {
 
@@ -36,10 +39,36 @@ allprojects {
     mavenLocal()
   }
 
+  tasks {
+
+    withType<KotlinCompile> {
+      compilerOptions {
+        jvmTarget.set(jvmVersion)
+      }
+    }
+
+    withType<JavaCompile> {
+      sourceCompatibility = jvmVersion.target
+      targetCompatibility = jvmVersion.target
+    }
+
+  }
+
 }
 
-tasks.dokkaHtmlMultiModule.configure {
-  outputDirectory.set(buildDir.resolve("dokkaCustomMultiModuleOutput"))
+tasks {
+
+  dokkaHtmlMultiModule.configure {
+    outputDirectory.set(buildDir.resolve("dokkaCustomMultiModuleOutput"))
+  }
+
+  dependencyUpdates {
+    gradleReleaseChannel = "current"
+    rejectVersionIf {
+      isNonStable(candidate.version) && !isNonStable(currentVersion)
+    }
+  }
+
 }
 
 subprojects {
@@ -59,8 +88,16 @@ subprojects {
     }
   }
 
-  tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions.jvmTarget = libs.versions.jvmTarget.get()
-  }
+//  tasks.withType<KotlinCompile>().configureEach {
+//    kotlinOptions.jvmTarget = libs.versions.jvmTarget.get()
+//  }
 
+}
+
+private val notStableKeywords = listOf("alpha", "beta", "rc")
+
+fun isNonStable(
+  version: String
+): Boolean = notStableKeywords.any {
+  version.lowercase().contains(it)
 }
