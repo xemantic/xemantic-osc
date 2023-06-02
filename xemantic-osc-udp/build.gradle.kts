@@ -43,6 +43,7 @@ kotlin {
 //  mingwX64()
 //  macosX64()
 
+  @Suppress("UNUSED_VARIABLE")
   sourceSets {
 
     val commonMain by getting
@@ -50,8 +51,8 @@ kotlin {
     val jvmAndNativeMain by creating {
       dependsOn(commonMain)
       dependencies {
-        implementation(project(":xemantic-osc-api"))
-        implementation(libs.ktor.network)
+        api(project(":xemantic-osc-api"))
+        api(libs.ktor.network)
         implementation(libs.kotlin.logging)
       }
     }
