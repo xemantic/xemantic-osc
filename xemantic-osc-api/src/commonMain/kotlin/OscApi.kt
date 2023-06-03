@@ -30,85 +30,71 @@ import kotlin.reflect.typeOf
 const val COMMA_BYTE: Byte = ','.code.toByte()
 
 data class OscPeer(
-  val host: String,
+  val hostname: String,
   val port: Int,
   val transport: String
 )
 
-class OscRouter {
+interface OscConverterRegistry {
 
-  private val converterMap = CopyOnWriteMap<KType, OscMessage.Converter<*>>(
-    initialMap = OscMessage.DEFAULT_CONVERTERS
+  fun converter(
+    type: KType,
+    converter: OscMessage.Converter<*>
   )
 
-  private val addressRouteMap = CopyOnWriteMap<String, Route<*>>()
-
-  private val addressMatcherRoutes = LinkedIterable<Route<*>>()
-
-  fun convert(
-    type: KType,
-    converter: OscMessage.Converter<*>,
-  ) {
-    converterMap.put(type, converter)
-  }
-
-  fun <T> route(
-    type: KType,
-    address: String,
-    addressMatcher: ((address: String) -> Boolean)?,
-    converter: OscMessage.Converter<T>?,
-    action: ((OscMessage<T>) -> Unit)? = null
-  ) {
-    val routeConverter = converter
-      ?: (converterMap.map[type] as OscMessage.Converter<T>?
-        ?: throw IllegalArgumentException("No converter for type: $type"))
-    val route = Route(
-      address,
-      addressMatcher,
-      routeConverter,
-      action
-    )
-    if (addressMatcher == null) {
-      addressRouteMap.put(address, route)
-    } else {
-      addressMatcherRoutes.addOrReplace(route) { existing ->
-        existing.address == route.address
-      }
-    }
-  }
-
-  internal fun unroute(address: String): Boolean {
-    val addressRouteRemoved = (addressRouteMap.remove(address) != null)
-    val addressMatcherRouteRemoved = (addressMatcherRoutes.remove { route ->
-      route.address == address
-    } != null)
-    return (addressRouteRemoved || addressMatcherRouteRemoved)
-  }
-
-  internal fun getRoute(address: String): Route<Any>? = (
-      addressRouteMap.map[address]
-          ?: addressMatcherRoutes.find { it.addressMatcher!!(address) }
-      ) as Route<Any>?
+  fun converters(
+    converters: Map<KType, OscMessage.Converter<*>>
+  )
 
 }
 
 class OscInput(
   block: OscInput.() -> Unit = {}
-) {
+) : OscConverterRegistry {
 
   private val logger = KotlinLogging.logger {}
 
-  val router = OscRouter()
+  @PublishedApi
+  internal val router = OscRouter()
 
   // block needs to be executed after all the properties are created
   init {
     block(this)
   }
 
-  inline fun <reified T> convert(
+  override fun converter(
+    type: KType,
+    converter: OscMessage.Converter<*>
+  ) {
+    router.converter(type, converter)
+  }
+
+  override fun converters(converters: Map<KType, OscMessage.Converter<*>>) {
+    router.converters(converters)
+  }
+
+  inline fun <reified T> converter(
     converter: OscMessage.Converter<T>
   ) {
-    router.convert(typeOf<T>(), converter)
+    converter(
+      typeOf<T>(),
+      converter
+    )
+  }
+
+  inline fun <reified T> convert(
+    typeTag: String? = null,
+    noinline decode: OscMessage.Reader.() -> T,
+    noinline encode: OscMessage.Writer<T>.() -> Unit
+  ) {
+    converter(
+      typeOf<T>(),
+      OscMessage.Converter(
+        typeTag,
+        decode,
+        encode
+      )
+    )
   }
 
   inline fun <reified T> route(
@@ -126,10 +112,15 @@ class OscInput(
     )
   }
 
-  /**
-   * This method is not intended to be used directly
-   */
-
+  fun route(
+    type: KType,
+    address: String
+  ) {
+    router.route<Any>(
+      type = type,
+      address = address
+    )
+  }
 
   fun unroute(address: String) {
     if (!router.unroute(address)) {
@@ -151,7 +142,7 @@ class OscInput(
 
   suspend fun handle(peer: OscPeer, input: Input) {
     val address = input.readOscString()
-    if (address == "[bundle]") { // TODO check with protocol
+    if (address == "#bundle") { // TODO check with protocol
       throw UnsupportedOperationException("bundle still not implemented")
     }
 
@@ -212,24 +203,54 @@ class OscInput(
 
 @OptIn(ExperimentalStdlibApi::class)
 class OscOutput(
-  private val peer: OscPeer,
-  private val transport: Transport
-) : AutoCloseable {
+  val peer: OscPeer,
+  private val sender: OscTransport.Sender
+) : OscConverterRegistry {
 
   private val logger = KotlinLogging.logger {}
 
-  val router = OscRouter()
+  @PublishedApi
+  internal val router = OscRouter()
 
-  inline fun <reified T> convert(
+  override fun converter(
+    type: KType,
+    converter: OscMessage.Converter<*>
+  ) {
+    router.converter(type, converter)
+  }
+
+  override fun converters(converters: Map<KType, OscMessage.Converter<*>>) {
+    router.converters(converters)
+  }
+
+  inline fun <reified T> converter(
     converter: OscMessage.Converter<T>
   ) {
-    router.convert(typeOf<T>(), converter)
+    converter(
+      typeOf<T>(),
+      converter
+    )
+  }
+
+  inline fun <reified T> convert(
+    typeTag: String? = null,
+    noinline decode: OscMessage.Reader.() -> T,
+    noinline encode: OscMessage.Writer<T>.() -> Unit
+  ) {
+    converter(
+      typeOf<T>(),
+      OscMessage.Converter(
+        typeTag,
+        decode,
+        encode
+      )
+    )
   }
 
   inline fun <reified T> route(
     address: String,
     noinline addressMatcher: ((address: String) -> Boolean)? = null,
-    converter: OscMessage.Converter<T>? = null,
+    converter: OscMessage.Converter<T>? = null
   ) {
     router.route(
       typeOf<T>(),
@@ -238,6 +259,19 @@ class OscOutput(
       converter,
       null
     )
+  }
+
+  fun route(
+    type: KType,
+    address: String
+  ) {
+    router.route<Any>(type, address)
+  }
+
+  fun unroute(
+    address: String
+  ) {
+    router.unroute(address)
   }
 
   fun sendBundle(packet: OscBundle) {
@@ -257,31 +291,19 @@ class OscOutput(
 
     if (route != null) {
       val converter = route.converter
-      transport.send {
+      sender.send {
         writeOscString(address)
         if (converter.typeTag != null) {
           writeOscTypeTag(converter.typeTag)
-          val writer = OscMessage.Writer(value, this)
-          route.converter.encode(writer)
-        }
+        } // otherwise it is a writers responsibility to write a typeTag
+        val writer = OscMessage.Writer(value, this)
+        route.converter.encode(writer)
       }
     } else {
       logger.warn {
-        "Nor route defined for address: $address, cannot send message to $peer"
+        "No route defined for address: $address, cannot send message to $peer"
       }
     }
-  }
-
-  override fun close() {
-    //clear all the lists
-    TODO("Not yet implemented")
-    // TODO do we need auto closeable here?
-  }
-
-  interface Transport {
-
-    suspend fun send(block: (Output.() -> Unit))
-
   }
 
 }
@@ -327,6 +349,25 @@ data class OscMessage<T>(
     val decode: Reader.() -> T,
     val encode: Writer<T>.() -> Unit
   ) {
+
+    class Builder {
+
+      @PublishedApi
+      internal val converters: MutableMap<KType, Converter<*>> = mutableMapOf()
+
+      inline fun <reified T> convert(
+        typeTag: String? = null,
+        noinline decode: Reader.() -> T,
+        noinline encode: Writer<T>.() -> Unit
+      ) {
+        converters[typeOf<T>()] = Converter<T>(
+          typeTag,
+          decode,
+          encode
+        )
+      }
+
+    }
 
     class Error(message: String) : RuntimeException(message)
 
@@ -441,6 +482,56 @@ data class OscMessage<T>(
       typeOf<List<Double>>() to Converter.LIST_OF_DOUBLES,
       typeOf<List<String>>() to Converter.LIST_OF_STRINGS
     )
+
+    fun converters(
+      block: Converter.Builder.() -> Unit
+    ): Map<KType, Converter<*>> {
+      val builder = Converter.Builder()
+      block(builder)
+      return builder.converters
+    }
+
+  }
+
+}
+
+interface OscTransport {
+
+  val type: String
+
+  val input: OscInput
+
+  val peer: OscPeer
+
+  suspend fun start()
+
+  fun output(
+    transport: OscTransport,
+    block: (OscOutput.() -> Unit) = {}
+  ): OscOutput = output(transport.peer, block)
+
+  fun output(
+    hostname: String,
+    port: Int,
+    block: (OscOutput.() -> Unit) = {}
+  ): OscOutput = output(
+    OscPeer(
+      hostname = hostname,
+      port = port,
+      transport = type
+    ),
+    block
+  )
+
+  fun output(
+    peer: OscPeer,
+    block: (OscOutput.() -> Unit) = {}
+  ): OscOutput
+
+  interface Sender {
+
+    suspend fun send(block: (Output.() -> Unit))
+
   }
 
 }

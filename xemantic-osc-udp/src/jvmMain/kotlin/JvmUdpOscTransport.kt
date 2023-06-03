@@ -1,3 +1,6 @@
+import com.xemantic.osc.OscInput
+import kotlinx.coroutines.Dispatchers
+
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
  * Copyright (C) 2023 Kazimierz Pogoda
@@ -15,32 +18,10 @@
  * You should have received a copy of the GNU Lesser General Public License along with xemantic-osc.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package com.xemantic.osc.demo
 
-import UdpOscTransport
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-
-fun main() {
-  val oscTransport = UdpOscTransport(
-    dispatcher = Dispatchers.IO,
-    port = 40002
-  )
-  val output = oscTransport.output(
-    hostname = "localhost",
-    port = 40001
-  ) {
-    route<Int>(
-      address = "/Note*",
-      addressMatcher = { address -> address.startsWith("/Note") }
-    )
-    route<Int>(
-      address = "/Velocity*",
-      addressMatcher = { address -> address.startsWith("/Velocity") }
-    )
-  }
-  runBlocking {
-    output.send("/Note10", 42)
-    output.send("/Velocity10", 112)
-  }
-}
+//actual fun platformUdpOscTransport(
+//  input: OscInput = OscInput(),
+//): UdpOscTransport = UdpOscTransport(
+//  input,
+//  dispatcher = Dispatchers.IO
+//)

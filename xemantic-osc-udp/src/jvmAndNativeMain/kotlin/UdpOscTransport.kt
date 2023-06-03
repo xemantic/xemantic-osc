@@ -19,24 +19,27 @@
 import com.xemantic.osc.OscOutput
 import com.xemantic.osc.OscPeer
 import com.xemantic.osc.OscInput
+import com.xemantic.osc.OscTransport
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import mu.KotlinLogging
 
-@OptIn(ExperimentalStdlibApi::class)
-class UdpOsc(
-  private val input: OscInput,
+class UdpOscTransport(
+  override val input: OscInput = OscInput(),
   dispatcher: CoroutineDispatcher,
   localAddress: InetSocketAddress? = null,
   configure: SocketOptions.UDPSocketOptions.() -> Unit = {}
-) : AutoCloseable {
+) : OscTransport {
 
   constructor(
+    input: OscInput  = OscInput(),
     dispatcher: CoroutineDispatcher,
-    input: OscInput,
-    host: String = "0.0.0.0",
+    host: String = "0.0.0.0", // TODO is is something like default socket when null?
     port: Int = 0,
     configure: SocketOptions.UDPSocketOptions.() -> Unit = {}
   ) : this(
@@ -46,6 +49,8 @@ class UdpOsc(
     configure
   )
 
+  override val type: String = "udp"
+
   private val logger = KotlinLogging.logger {}
 
   private val selectorManager: SelectorManager = SelectorManager(dispatcher)
@@ -54,55 +59,49 @@ class UdpOsc(
     selectorManager
   ).udp().bind(localAddress, configure)
 
-  val hostname = (socket.localAddress as InetSocketAddress).hostname
-  val port = (socket.localAddress as InetSocketAddress).port
-
-  suspend fun start() {
-    logger.info { "Starting OSC UDP listener: $hostname:$port" }
-    while (true) {
-      val datagram = socket.incoming.receive()
-      val address = datagram.address as InetSocketAddress
-      val peer = OscPeer(
-        host = address.hostname,
-        port = address.port,
-        transport = "upd"
-      )
-      datagram.packet.use { packet ->
-        input.handle(peer, packet)
-      }
-    }
-  }
-
-  fun output(
-    host: String,
-    port: Int,
-    block: OscOutput.() -> Unit = {}
-  ): OscOutput = output(
-    remoteAddress = InetSocketAddress(host, port),
-    block
+  override val peer: OscPeer = OscPeer(
+    (socket.localAddress as InetSocketAddress).hostname,
+    (socket.localAddress as InetSocketAddress).port,
+    transport = "udp"
   )
 
-  fun output(
-    remoteAddress: InetSocketAddress,
-    block: OscOutput.() -> Unit = {}
-  ): OscOutput = OscOutput(
-    peer = OscPeer(
-      remoteAddress.hostname,
-      remoteAddress.port,
-      "udp"
-    ),
-    transport = OutputTransport(remoteAddress)
-  ).apply { block(this) }
+  override suspend fun start() {
+    logger.info { "Starting OSC: $peer" }
+    try {
+      while (currentCoroutineContext().isActive) {
+        val datagram = socket.incoming.receive()
+        datagram.packet.use { packet ->
+          input.handle(peer, packet)
+        }
+      }
+    } catch (e: CancellationException) {
+      logger.info { "OSC coroutine cancelled: $peer" }
+    } finally {
+      selectorManager.close()
+      socket.close()
+    }
 
-  override fun close() {
-    logger.info { "Closing OSC UDP socket: $hostname:$port" }
-    selectorManager.close()
-    socket.close()
   }
 
-  inner class OutputTransport(
+  override fun output(
+    peer: OscPeer,
+    block: (OscOutput.() -> Unit)
+  ): OscOutput {
+    val remoteAddress = InetSocketAddress(
+      hostname = peer.hostname,
+      port = peer.port
+    )
+    val output = OscOutput(
+      peer = peer,
+      sender = UdpOscTransportSender(remoteAddress)
+    )
+    block(output)
+    return output
+  }
+
+  inner class UdpOscTransportSender(
     private val remoteAddress: SocketAddress
-  ) : OscOutput.Transport {
+  ) : OscTransport.Sender {
 
     override suspend fun send(block: Output.() -> Unit) {
       socket.send(
@@ -279,3 +278,5 @@ class UdpOsc(
 //  val socketAddress: SocketAddress,
 //  val converter: Osc.Message.Converter<Any>,
 //)
+
+//expect fun platformUdpOscTransport(): UdpOscTransport

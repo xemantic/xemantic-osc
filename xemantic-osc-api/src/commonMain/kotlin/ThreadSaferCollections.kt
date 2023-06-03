@@ -18,13 +18,18 @@
 
 package com.xemantic.osc
 
-internal class LinkedIterable<T> : Iterable<T>{
+//import kotlin.concurrent.Volatile
 
-  class Node<T>(var value: T, var next: Node<T>?)
+class LinkedIterable<T> : Iterable<T>{
 
-  var first: Node<T>? = null
+  private class Node<T>(var value: T, var next: Node<T>?)
+
+  @OptIn(ExperimentalStdlibApi::class)
+//  @kotlin.concurrent.Volatile
+  private var first: Node<T>? = null
 
   override fun iterator(): Iterator<T> = object : Iterator<T> {
+    @Suppress("UNCHECKED_CAST")
     var head = Node(
       value = null as T,
       next = first
@@ -68,10 +73,12 @@ internal class LinkedIterable<T> : Iterable<T>{
 
 }
 
-internal class CopyOnWriteMap<K, V>(
+class CopyOnWriteMap<K, V>(
   initialMap: Map<K, V> = emptyMap()
 ) {
 
+//  @OptIn(ExperimentalStdlibApi::class)
+//  @kotlin.concurrent.Volatile
   var map: Map<K, V> = initialMap
     private set
 
@@ -80,6 +87,12 @@ internal class CopyOnWriteMap<K, V>(
     val oldValue = newMap.put(key, value)
     map = newMap
     return oldValue
+  }
+
+  fun putAll(from: Map<out K, V>) {
+    val newMap = map.toMutableMap()
+    newMap.putAll(from)
+    map = newMap
   }
 
   fun remove(key: K): V? {
@@ -91,6 +104,13 @@ internal class CopyOnWriteMap<K, V>(
     } else {
       null
     }
+  }
+
+  fun getOrPut(key: K, defaultValue: () -> V): V {
+    val newMap = map.toMutableMap()
+    val value = newMap.getOrPut(key, defaultValue)
+    map = newMap
+    return value
   }
 
 }

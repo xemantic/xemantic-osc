@@ -17,7 +17,7 @@
  */
 package com.xemantic.osc.demo
 
-import UdpOsc
+import UdpOscTransport
 import com.xemantic.osc.OscMessage
 import com.xemantic.osc.OscInput
 import kotlinx.coroutines.Dispatchers
@@ -90,25 +90,19 @@ fun main() {
       }
     }
   }
-  UdpOsc(
+  val oscTransport = UdpOscTransport(
     input = input,
     dispatcher = Dispatchers.IO,
     port = 40001
-  ).use { osc ->
-    runBlocking(Dispatchers.IO) {
-      launch {
-        input.messages.collect {
-          logger.debug { "Message received: $it" }
-        }
+  )
+  runBlocking(Dispatchers.IO) {
+    launch {
+      oscTransport.start()
+    }
+    launch {
+      input.messages.collect {
+        logger.debug { "Message received: $it" }
       }
-      osc.start()
-
-
-//      osc.messageFlow
-//        filter {
-//        }
-//
-//      }
     }
   }
 }
