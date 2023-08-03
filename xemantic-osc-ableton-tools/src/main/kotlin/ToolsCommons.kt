@@ -18,38 +18,13 @@
 
 package com.xemantic.osc.ableton.tools
 
-import com.xemantic.osc.ableton.MidiSequenceToAbletonOscNotesForwarder
-import kotlinx.coroutines.runBlocking
-import java.io.File
-import javax.sound.midi.MidiSystem
-import kotlin.system.exitProcess
+import kotlin.concurrent.thread
 
-fun main(args: Array<String>) = forwardMidiFileToRemoteOsc(args)
-
-fun forwardMidiFileToRemoteOsc(args: Array<String>) {
-
-  println(
-    "Usage: forwardMidiFileToRemoteOsc file host port [host port..]"
-  )
-
-  if (args.size < 3) {
-    println("Error: not enough arguments")
-    exitProcess(3)
-  }
-
-  val file = args[0]
-  val sequence = MidiSystem.getSequence(File(file))
-  val hosts = args.copyOfRange(1, args.size).asHosts()
-
-  val forwarder = MidiSequenceToAbletonOscNotesForwarder(
-    sequence,
-    hosts
-  )
-
-  onExitClose(forwarder)
-
-  runBlocking {
-    forwarder.start()
-  }
-
+internal fun onExitClose(closeable: AutoCloseable) {
+  Runtime.getRuntime().addShutdownHook(thread(start = false) {
+    closeable.close()
+  })
 }
+
+internal fun Array<String>.asHosts(): List<Pair<String, Int>> =
+  toList().chunked(2).map { it[0] to it[1].toInt() }

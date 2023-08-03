@@ -18,42 +18,38 @@
 
 package com.xemantic.osc.ableton.tools
 
-import com.xemantic.osc.ableton.MidiDeviceToAbletonOscNotesForwarder
+import com.xemantic.osc.ableton.AbletonOscNotesReceivingMidiDevicePlayer
 import com.xemantic.osc.ableton.midi.listMidiDevices
 import kotlinx.coroutines.runBlocking
-import javax.sound.midi.*
+import javax.sound.midi.MidiSystem
 import kotlin.system.exitProcess
 
-fun main(args: Array<String>) = forwardMidiDeviceToRemoteOsc(args)
+fun main(args: Array<String>) = playAbletonNotesOnMidiDevice(args)
 
-fun forwardMidiDeviceToRemoteOsc(args: Array<String>) {
+fun playAbletonNotesOnMidiDevice(args: Array<String>) {
 
-  println(
-    "Usage: forwardMidiDeviceToRemoteOscPlayers midi_device_no host port [host port..]"
-  )
+  println("Usage: playAbletonNotesOnMidiDevice osc_port midi_device_no")
 
   val deviceInfos = MidiSystem.getMidiDeviceInfo()
   println(listMidiDevices(deviceInfos))
 
-  if (args.size < 3) {
-    println("Error: not enough arguments")
-    exitProcess(3)
+  if (args.size < 2) {
+    exitProcess(1)
   }
 
-  val midiDeviceNo = args[0].toInt()
+  val oscPort = args[0].toInt()
+  val midiDeviceNo = args[1].toInt()
   val deviceInfo = deviceInfos[midiDeviceNo]
-  val midiDevice = MidiSystem.getMidiDevice(deviceInfo)
-  val hosts = args.copyOfRange(1, args.size).asHosts()
 
-  val forwarder = MidiDeviceToAbletonOscNotesForwarder(
-    midiDevice,
-    hosts
+  val player = AbletonOscNotesReceivingMidiDevicePlayer(
+    oscPort = oscPort,
+    midiDevice = MidiSystem.getMidiDevice(deviceInfo)
   )
 
-  onExitClose(forwarder)
+  onExitClose(player)
 
   runBlocking {
-    forwarder.start()
+    player.start()
   }
 
 }
