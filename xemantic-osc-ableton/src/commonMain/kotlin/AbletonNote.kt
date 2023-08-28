@@ -27,9 +27,10 @@ public data class AbletonNote(
   val key: Int,
   val velocity: Int,
   /**
-   * The index of polyphonic note as appended at the
-   * end of `/Note*`, `/Velocity*` addresses in place of the
-   * `*`. The [polyphonyIndex] starts with `1` and will
+   * The index of a polyphonic note as appended by
+   * Ableton's Max for Live OSC plugin. It appears at the
+   * end of the `/Note*` and  `/Velocity*` addresses in place of the
+   * `*`. The [polyphonyIndex] starts with `1` and should
    * be always `1` for monophonic note stream.
    */
   val polyphonyIndex: Int,
