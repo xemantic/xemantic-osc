@@ -26,6 +26,12 @@ import com.xemantic.osc.OscPeer
 public data class AbletonNote(
   val key: Int,
   val velocity: Int,
+  /**
+   * The index of polyphonic note as appended at the
+   * end of `/Note*`, `/Velocity*` addresses in place of the
+   * `*`. The [polyphonyIndex] starts with `1` and will
+   * be always `1` for monophonic note stream.
+   */
   val polyphonyIndex: Int,
   val peer: OscPeer
 )
