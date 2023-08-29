@@ -38,7 +38,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * @param output the OSC output.
  * @param addressBase the address base for `/Note*` and `/Velocity` routing.
  */
-public class MidiNotes2AbletonOscNotesSender(
+public class Midi2AbletonNotesOscSender(
   private val output: OscOutput,
   private val addressBase: String = ""
 ) {
@@ -101,7 +101,7 @@ public class MidiNotes2AbletonOscNotesSender(
     }
   }
 
-  public fun unrouteAbletonOscNotes() {
+  public fun unrouteAbletonNotes() {
 
     val noteAddressBase = "$addressBase/Note"
     val velocityAddressBase = "$addressBase/Velocity"
@@ -112,8 +112,8 @@ public class MidiNotes2AbletonOscNotesSender(
     }
 
     output.unroute(
-      "$addressBase/Note*",
-      "$addressBase/Velocity*"
+      "$noteAddressBase*",
+      "$velocityAddressBase*"
     )
 
   }

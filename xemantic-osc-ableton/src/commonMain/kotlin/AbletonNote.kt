@@ -21,13 +21,14 @@ package com.xemantic.osc.ableton
 import com.xemantic.osc.OscPeer
 
 /**
- * A note received from Ableton via OSC protocol.
+ * A note received from
+ * [Ableton's Max for Live OSC plugin](https://www.ableton.com/en/packs/connection-kit/).
  */
 public data class AbletonNote(
   val key: Int,
   val velocity: Int,
   /**
-   * The index of a polyphonic note as appended by
+   * The index of a polyphonic note as supplied by
    * Ableton's Max for Live OSC plugin. It appears at the
    * end of the `/Note*` and  `/Velocity*` addresses in place of the
    * `*`. The [polyphonyIndex] starts with `1` and should

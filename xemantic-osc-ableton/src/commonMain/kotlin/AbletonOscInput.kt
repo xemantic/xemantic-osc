@@ -40,15 +40,15 @@ private val logger = KotlinLogging.logger {}
  * val input = OscInput(
  *   dispatcher = newSingleThreadContext("note-listener")
  * ) {
- *   routeAbletonOscNotes()
+ *   routeAbletonNotes()
  * }
  * ```
  *
  * @param addressBase the OSC address base starting with `/`,
  *          e.g. `/ableton`, defaults to empty string.
- * @see unrouteAbletonOscNotes
+ * @see unrouteAbletonNotes
  */
-public fun OscInput.routeAbletonOscNotes(
+public fun OscInput.routeAbletonNotes(
   addressBase: String = ""
 ) {
 
@@ -138,7 +138,7 @@ public fun Flow<OscMessage<*>>.toAbletonNotes(
  * @param addressBase the OSC address base starting with `/`,
  *          e.g. `/ableton`, defaults to empty string.
  */
-public fun OscInput.unrouteAbletonOscNotes(
+public fun OscInput.unrouteAbletonNotes(
   addressBase: String = ""
 ) {
 
