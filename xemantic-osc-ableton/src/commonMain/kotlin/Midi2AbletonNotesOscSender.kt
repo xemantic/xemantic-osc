@@ -24,7 +24,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * A service transforming MIDI notes into OSC notes, as if they were
- * [produced by Ableton's Max for Live plugin](https://www.ableton.com/en/packs/connection-kit/),
+ * produced by
+ * [Ableton's Max for Live OSC plugin](https://www.ableton.com/en/packs/connection-kit/),
  * therefore it can be used for mimicking or simulating Ableton output.
  *
  * The MIDI input is detached from any particular implementation, so it

@@ -29,20 +29,36 @@ private val logger = KotlinLogging.logger {}
 
 /**
  * Routes `/Note*` and `/Velocity*` addresses for incoming
- * OSC messages describing [AbletonNote]s sent out by Ableton's
- * Max for Live OSC plugin.
+ * OSC messages describing [AbletonNote]s sent out by
+ * [Ableton's Max for Live OSC plugin](https://www.ableton.com/en/packs/connection-kit/).
  *
- * Note: The associated [OscInput] has to be created
- * with a single-threaded coroutine dispatcher to guarantee
- * that received [OscMessage]s are not reordered:
+ * Note: The associated [OscInput] has to be passed
+ * [kotlinx.coroutines.CoroutineScope] associated
+ * with a single-threaded [kotlin.coroutines.CoroutineContext]
+ * to guarantee that received [OscMessage]s are not reordered:
  *
  * ```
- * val input = OscInput(
- *   dispatcher = newSingleThreadContext("note-listener")
- * ) {
+ * val scope = CoroutineScope(
+ *   newSingleThreadContext("note-listener")
+ * )
+ * val input = OscInput(scope) {
  *   routeAbletonNotes()
  * }
  * ```
+ *
+ * Note: `runBlocking` as well as `runTest` used in testing
+ * coroutine code has such a guarantee:
+ * ```
+ * runBlocking {
+ *   oscInput {
+ *     routeAbletonNotes()
+ *   }
+ * }
+ * ```
+ *
+ * In this example a special extension function `CoroutineScope.oscInput`
+ * is used to associate [OscInput] automatically with current
+ * [kotlinx.coroutines.CoroutineScope]
  *
  * @param addressBase the OSC address base starting with `/`,
  *          e.g. `/ableton`, defaults to empty string.
