@@ -99,6 +99,7 @@ public fun OscInput.routeAbletonNotes(
  *
  * @param addressBase the OSC address base starting with `/`,
  *          e.g. `/ableton`, defaults to empty string.
+ * @return the [Flow] of [AbletonNote]s.
  */
 public fun Flow<OscMessage<*>>.toAbletonNotes(
   addressBase: String = "",
