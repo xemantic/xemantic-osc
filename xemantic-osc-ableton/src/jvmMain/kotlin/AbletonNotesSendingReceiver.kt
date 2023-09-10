@@ -26,7 +26,7 @@ import javax.sound.midi.ShortMessage
 import javax.sound.midi.ShortMessage.NOTE_OFF
 import javax.sound.midi.ShortMessage.NOTE_ON
 
-public class AbletonNotesSendingMidiReceiver(
+public class AbletonNotesSendingReceiver(
   private val sender: Midi2AbletonNotesOscSender,
   private val scope: CoroutineScope
 ) : Receiver {
