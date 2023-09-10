@@ -184,6 +184,8 @@ class AbletonOscInputTest {
       AbletonNote(key = 42, velocity = 103, polyphonyIndex = 1, peer),
       AbletonNote(key = 42, velocity = 0, polyphonyIndex = 1, peer)
     )
+
+    // cleanup
     plug.cancelAndJoin()
   }
 
@@ -216,6 +218,8 @@ class AbletonOscInputTest {
       AbletonNote(key = 42, velocity = 100, polyphonyIndex = 1, peer),
       AbletonNote(key = 42, velocity = 0, polyphonyIndex = 1, peer)
     )
+
+    // cleanup
     plug.cancelAndJoin()
   }
 
