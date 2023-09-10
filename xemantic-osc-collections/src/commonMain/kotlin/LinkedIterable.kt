@@ -18,31 +18,30 @@
 
 package com.xemantic.osc.collections
 
-public class LinkedIterable<T> : Iterable<T>{
+import kotlin.concurrent.Volatile
+
+public class LinkedIterable<T> : Iterable<T> {
 
   private class Node<T>(
     var value: T,
-    @kotlin.concurrent.Volatile
+    @Volatile
     var next: Node<T>?
   )
 
-  @kotlin.concurrent.Volatile
+  @Volatile
   private var first: Node<T>? = null
 
   override fun iterator(): Iterator<T> = object : Iterator<T> {
 
-    private var head: Node<T>? = first
+    private var current: Node<T>? = first
 
-    override fun hasNext(): Boolean = (head != null)
+    override fun hasNext() = current != null
 
     override fun next(): T {
-      if (head != null) {
-        val value = head!!.value
-        head = head!!.next
-        return value
-      } else {
-        throw NoSuchElementException("No more elements in iterator")
-      }
+      val value = current?.value
+        ?: throw NoSuchElementException("No more elements in iterator")
+      current = current?.next
+      return value
     }
 
   }
