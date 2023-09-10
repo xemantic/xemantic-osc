@@ -68,6 +68,7 @@ kotlin {
     val commonTest by getting {
       dependencies {
         implementation(project(":xemantic-osc-test"))
+        implementation(libs.kotlin.test)
         implementation(libs.kotest.assertions.core)
       }
     }
