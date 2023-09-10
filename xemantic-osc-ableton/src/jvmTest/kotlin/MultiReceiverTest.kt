@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with xemantic-osc.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+
 package com.xemantic.osc.ableton.midi
 
 import io.kotest.matchers.collections.shouldHaveSize
