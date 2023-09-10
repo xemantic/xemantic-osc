@@ -16,6 +16,12 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+plugins {
+  alias(libs.plugins.kotlin.multiplatform)
+  alias(libs.plugins.dokka)
+  `maven-publish`
+}
+
 kotlin {
 
   explicitApi()
@@ -41,6 +47,12 @@ kotlin {
   }
 
   sourceSets {
+
+    all {
+      languageSettings {
+        languageVersion = libs.versions.kotlinLanguageVersion.get()
+      }
+    }
 
     val commonMain by getting
 
