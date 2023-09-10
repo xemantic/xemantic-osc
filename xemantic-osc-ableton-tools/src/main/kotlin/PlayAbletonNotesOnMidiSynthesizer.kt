@@ -18,36 +18,76 @@
 
 package com.xemantic.osc.ableton.tools
 
-import com.xemantic.osc.ableton.AbletonOscNotesReceivingMidiSynthesizerPlayer
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.int
+import com.xemantic.osc.ableton.midi.playOn
+import com.xemantic.osc.ableton.routeAbletonNotes
+import com.xemantic.osc.ableton.toAbletonNotes
+import com.xemantic.osc.oscInput
+import com.xemantic.osc.udp.UdpOscTransport
 import kotlinx.coroutines.*
 import javax.sound.midi.MidiSystem
-import kotlin.system.exitProcess
+import javax.sound.midi.Synthesizer
 
-fun main(args: Array<String>) = playAbletonNotesOnMidiSynthesizer(args)
+fun main(args: Array<String>) = PlayAbletonNotesOnMidiSynthesizer().main(args)
 
-fun playAbletonNotesOnMidiSynthesizer(args: Array<String>) {
+@Suppress("MemberVisibilityCanBePrivate")
+class PlayAbletonNotesOnMidiSynthesizer : CliktCommand(
+  help = "Receives notes sent by Ableton via OSC protocol " +
+      "and plays them back on the local JVM MIDI synthesizer.",
+  printHelpOnEmptyArgs = true
+) {
 
-  println("Usage: playAbletonNotesOnMidiSynthesizer osc_port [instrument]")
+  val port: Int? by argument(
+    help = "The UDP/OSC port to listen to midi notes, random port if not specified"
+  ).int()
 
-  val synthesizer = MidiSystem.getSynthesizer()
-
-  // TODO list instruments
-
-  if (args.isEmpty()) {
-    exitProcess(1)
-  }
-
-  val oscPort = args[0].toInt()
-
-  val player = AbletonOscNotesReceivingMidiSynthesizerPlayer(
-    oscPort = oscPort,
-    synthesizer = synthesizer
+  val localhost: String? by option(
+    help = "The local interface to bind to, if omitted, it will listen on all the interfaces"
   )
+  val addressBase: String by option(
+    help = "The OSC address base, e.g.: /notes"
+  ).default("")
 
-  onExitClose(player)
+  val instrument: Int by option(
+    help = "The MIDI synthesizer instrument to use"
+  ).int().default(0)
 
-  runBlocking {
-    player.start()
+
+
+  override fun run() {
+    val closer = Closer()
+
+    val synthesizer: Synthesizer = closer.closeOnExit(
+      MidiSystem.getSynthesizer()
+    )
+
+    val (selectorManager, socket) = udpSocket(localhost, port)
+    closer.onExit {
+      socket.close()
+      selectorManager.close()
+    }
+    val transport = UdpOscTransport(socket)
+
+    val channel = with(synthesizer) {
+      open()
+      loadInstrument(defaultSoundbank.instruments[instrument])
+      channels[0]
+    }
+    channel.programChange(0, instrument)
+
+    runBlocking {
+      oscInput {
+        routeAbletonNotes(addressBase)
+        connect(transport)
+      }.messages
+        .toAbletonNotes(addressBase)
+        .playOn(channel)
+    }
+
   }
 
 }

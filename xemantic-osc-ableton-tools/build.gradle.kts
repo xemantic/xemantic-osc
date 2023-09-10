@@ -16,17 +16,37 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.xemantic.osc.ableton.tools
+plugins {
+  kotlin("jvm")
+  alias(libs.plugins.dokka)
+  alias(libs.plugins.shadow)
+  `maven-publish`
+  application
+}
 
-import com.github.ajalt.clikt.core.NoOpCliktCommand
-import com.github.ajalt.clikt.core.subcommands
+kotlin {
+  sourceSets {
+    all {
+      languageSettings {
+        languageVersion = libs.versions.kotlinLanguageVersion.get()
+        optIn("kotlinx.coroutines.ExperimentalCoroutinesApi," +
+            "kotlinx.coroutines.DelicateCoroutinesApi")
+      }
+    }
+  }
+}
 
-fun main(args: Array<String>) = AbletonTools().subcommands(
-  PlayAbletonNotesOnMidiDevice(),
-  PlayAbletonNotesOnMidiSynthesizer(),
-  ListMidiSynthesizerInstruments(),
-  ForwardMidiFileToRemoteOsc(),
-  ForwardMidiDeviceToRemoteOsc()
-).main(args)
+dependencies {
+  implementation(project(":xemantic-osc-ableton"))
+  implementation(project(":xemantic-osc-network"))
+  implementation(libs.clikt)
+  runtimeOnly(libs.kotlin.logging)
+  runtimeOnly(libs.log4j.slf4j2)
+  runtimeOnly(libs.log4j.core)
+  runtimeOnly(libs.jackson.databind)
+  runtimeOnly(libs.jackson.json)
+}
 
-class AbletonTools : NoOpCliktCommand()
+application {
+  mainClass = "com.xemantic.osc.ableton.tools.AbletonToolsKt" // The main class of the application
+}

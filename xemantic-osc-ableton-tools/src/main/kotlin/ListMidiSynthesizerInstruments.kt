@@ -18,15 +18,27 @@
 
 package com.xemantic.osc.ableton.tools
 
-import com.github.ajalt.clikt.core.NoOpCliktCommand
-import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
+import javax.sound.midi.MidiSystem
+import javax.sound.midi.Synthesizer
 
-fun main(args: Array<String>) = AbletonTools().subcommands(
-  PlayAbletonNotesOnMidiDevice(),
-  PlayAbletonNotesOnMidiSynthesizer(),
-  ListMidiSynthesizerInstruments(),
-  ForwardMidiFileToRemoteOsc(),
-  ForwardMidiDeviceToRemoteOsc()
-).main(args)
+fun main(args: Array<String>) = ListMidiSynthesizerInstruments().main(args)
 
-class AbletonTools : NoOpCliktCommand()
+class ListMidiSynthesizerInstruments : CliktCommand(
+  help = "Lists instruments available on the default JVM MIDI synthesizer.",
+  printHelpOnEmptyArgs = true
+) {
+
+  private val closer: Closer = Closer()
+
+  private val synthesizer: Synthesizer = closer.closeOnExit(
+    MidiSystem.getSynthesizer()
+  )
+
+  override fun commandHelpEpilog(context: Context): String =
+    synthesizer.listInstruments()
+
+  override fun run() { /* nothing to do here */ }
+
+}

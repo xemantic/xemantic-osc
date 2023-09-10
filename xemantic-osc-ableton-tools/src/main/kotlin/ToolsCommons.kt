@@ -18,13 +18,75 @@
 
 package com.xemantic.osc.ableton.tools
 
+import io.ktor.network.selector.*
+import io.ktor.network.sockets.*
+import kotlinx.coroutines.Dispatchers
+import java.util.LinkedList
+import javax.sound.midi.MidiDevice
+import javax.sound.midi.MidiSystem
+import javax.sound.midi.Synthesizer
 import kotlin.concurrent.thread
 
-internal fun onExitClose(closeable: AutoCloseable) {
-  Runtime.getRuntime().addShutdownHook(thread(start = false) {
-    closeable.close()
-  })
+class Closer {
+
+  private val closeables = LinkedList<AutoCloseable>()
+
+  init {
+    Runtime.getRuntime().addShutdownHook(thread(start = false) {
+      closeables.reversed().forEach {
+        it.close()
+      }
+    })
+  }
+
+  fun <T : AutoCloseable> closeOnExit(closeable: T): T {
+    closeables.add(closeable)
+    return closeable
+  }
+
+  fun onExit(block: () -> Unit) {
+    closeables.add(AutoCloseable { block() })
+  }
+
 }
 
-internal fun Array<String>.asHosts(): List<Pair<String, Int>> =
-  toList().chunked(2).map { it[0] to it[1].toInt() }
+internal fun udpSocket(
+  hostname: String? = null,
+  port: Int? = null
+): Pair<SelectorManager, BoundDatagramSocket> {
+  val selectorManager = SelectorManager(Dispatchers.IO)
+  val socket = aSocket(selectorManager).udp().let {
+    if (port == null && hostname == null) {
+      it.bind()
+    } else {
+      it.bind(InetSocketAddress(hostname ?: "::", port ?: 0))
+    }
+  }
+  return selectorManager to socket
+}
+
+internal fun listMidiDevices(
+  deviceInfos: Array<MidiDevice.Info>
+): String = """
+  MIDI devices:
+
+  |no|name|vendor|description|version|max receivers|max transmitters|
+  |--|----|------|-----------|-------|-------------|----------------|
+""".trimIndent() + "\n" +
+    deviceInfos.mapIndexed { index, info ->
+      val device = MidiSystem.getMidiDevice(info)
+      "|$index|${info.name}|${info.vendor}" +
+          "|${info.description}|${info.version}" +
+          "|${formatMax(device.maxReceivers)}" +
+          "|${formatMax(device.maxTransmitters)}|"
+    }.joinToString("\n")
+
+private fun formatMax(count: Int) = if (count == -1) "∞" else count
+
+internal fun Synthesizer.listInstruments(): String = """
+  MIDI synthesizer instruments:
+
+""".trimIndent() + "\n" +
+      defaultSoundbank.instruments.mapIndexed {  index, instrument ->
+        "* $index - ${instrument.name}"
+      }.joinToString("\n")

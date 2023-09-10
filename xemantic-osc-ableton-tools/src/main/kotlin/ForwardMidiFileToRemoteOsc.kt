@@ -18,38 +18,90 @@
 
 package com.xemantic.osc.ableton.tools
 
-import com.xemantic.osc.ableton.MidiSequenceToAbletonOscNotesForwarder
-import kotlinx.coroutines.runBlocking
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.convert
+import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.types.file
+import com.xemantic.osc.ableton.Midi2AbletonNotesOscSender
+import com.xemantic.osc.ableton.midi.AbletonNotesSendingReceiver
+import com.xemantic.osc.ableton.midi.MultiReceiver
+import com.xemantic.osc.udp.UdpOscTransport
+import kotlinx.coroutines.*
 import java.io.File
 import javax.sound.midi.MidiSystem
-import kotlin.system.exitProcess
 
-fun main(args: Array<String>) = forwardMidiFileToRemoteOsc(args)
+fun main(args: Array<String>) = ForwardMidiFileToRemoteOsc().main(args)
 
-fun forwardMidiFileToRemoteOsc(args: Array<String>) {
+@Suppress("MemberVisibilityCanBePrivate")
+class ForwardMidiFileToRemoteOsc : CliktCommand(
+  help = "Forwards MIDI notes from a local MIDI file to " +
+      "remote hosts accepting Ableton OSC notes.",
+  printHelpOnEmptyArgs = true
+) {
 
-  println(
-    "Usage: forwardMidiFileToRemoteOsc file host port [host port..]"
+  val midiFile: File by argument(
+    help = "The MIDI file to play (*.mid)"
+  ).file(
+    mustExist = true,
+    canBeDir = false,
+    mustBeReadable = true
   )
 
-  if (args.size < 3) {
-    println("Error: not enough arguments")
-    exitProcess(3)
-  }
+  val hostsWithPorts: List<Pair<String, Int>> by argument(
+    name = "host:port",
+    help = "The host and UDP port to connect to, at least one " +
+        "is required, many can be specified"
+  ).convert {
+    val split = it.split(":")
+    split[0] to split[1].toInt()
+  }.multiple(required = true)
 
-  val file = args[0]
-  val sequence = MidiSystem.getSequence(File(file))
-  val hosts = args.copyOfRange(1, args.size).asHosts()
+  override fun run() {
 
-  val forwarder = MidiSequenceToAbletonOscNotesForwarder(
-    sequence,
-    hosts
-  )
+    val closer = Closer()
+    val fileSequence = MidiSystem.getSequence(midiFile)
 
-  onExitClose(forwarder)
+    val (selectorManager, socket) = udpSocket()
+    closer.onExit {
+      socket.close()
+      selectorManager.close()
+    }
 
-  runBlocking {
-    forwarder.start()
+    val transport = UdpOscTransport(socket)
+
+    val outputs = hostsWithPorts.map { (host, port) ->
+      transport.output(host, port)
+    }
+
+    val sequencer = closer.closeOnExit(
+      MidiSystem.getSequencer(false)
+    )
+
+    val receiver = MultiReceiver(
+      outputs.mapIndexed { index, output ->
+        val scope = CoroutineScope(newSingleThreadContext("note-sender$index"))
+        closer.onExit { scope.cancel() }
+        AbletonNotesSendingReceiver(
+          Midi2AbletonNotesOscSender(output),
+          CoroutineScope(newSingleThreadContext("note-sender$index"))
+        )
+      }
+    )
+
+    with(sequencer) {
+      open()
+      sequence = fileSequence
+      transmitter.receiver = receiver
+      start()
+    }
+
+    runBlocking {
+      while (sequencer.isRunning) {
+        delay(100)
+      }
+    }
+
   }
 
 }

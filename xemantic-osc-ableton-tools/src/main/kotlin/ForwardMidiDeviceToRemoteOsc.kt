@@ -18,42 +18,89 @@
 
 package com.xemantic.osc.ableton.tools
 
-import com.xemantic.osc.ableton.MidiDeviceToAbletonOscNotesForwarder
-import com.xemantic.osc.ableton.midi.listMidiDevices
-import kotlinx.coroutines.runBlocking
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.convert
+import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.types.int
+import com.xemantic.osc.ableton.Midi2AbletonNotesOscSender
+import com.xemantic.osc.ableton.midi.AbletonNotesSendingReceiver
+import com.xemantic.osc.ableton.midi.MultiReceiver
+import com.xemantic.osc.udp.UdpOscTransport
+import kotlinx.coroutines.*
 import javax.sound.midi.*
-import kotlin.system.exitProcess
 
-fun main(args: Array<String>) = forwardMidiDeviceToRemoteOsc(args)
+fun main(args: Array<String>) = ForwardMidiDeviceToRemoteOsc().main(args)
 
-fun forwardMidiDeviceToRemoteOsc(args: Array<String>) {
+@Suppress("MemberVisibilityCanBePrivate")
+class ForwardMidiDeviceToRemoteOsc : CliktCommand(
+  help = "Forwards MIDI notes from a local MIDI device to " +
+      "remote hosts accepting Ableton OSC notes.",
+  printHelpOnEmptyArgs = true
+) {
 
-  println(
-    "Usage: forwardMidiDeviceToRemoteOscPlayers midi_device_no host port [host port..]"
-  )
+  val midiDevice: Int by argument(
+    help = "The MIDI device to connect to"
+  ).int()
 
-  val deviceInfos = MidiSystem.getMidiDeviceInfo()
-  println(listMidiDevices(deviceInfos))
+  val hostsWithPorts: List<Pair<String, Int>> by argument(
+    name = "host:port",
+    help = "The host and UDP port to connect to, at least one " +
+        "is required, many can be specified"
+  ).convert {
+    val split = it.split(":")
+    split[0] to split[1].toInt()
+  }.multiple(required = true)
 
-  if (args.size < 3) {
-    println("Error: not enough arguments")
-    exitProcess(3)
-  }
+  private val closer = Closer()
 
-  val midiDeviceNo = args[0].toInt()
-  val deviceInfo = deviceInfos[midiDeviceNo]
-  val midiDevice = MidiSystem.getMidiDevice(deviceInfo)
-  val hosts = args.copyOfRange(1, args.size).asHosts()
+  private val deviceInfos: Array<MidiDevice.Info> = MidiSystem.getMidiDeviceInfo()
 
-  val forwarder = MidiDeviceToAbletonOscNotesForwarder(
-    midiDevice,
-    hosts
-  )
+  override fun commandHelpEpilog(context: Context): String =
+    listMidiDevices(deviceInfos)
 
-  onExitClose(forwarder)
+  override fun run() {
 
-  runBlocking {
-    forwarder.start()
+    val deviceInfo = deviceInfos[midiDevice]
+    val midiDevice = closer.closeOnExit(
+      MidiSystem.getMidiDevice(deviceInfo)
+    )
+
+    val (selectorManager, socket) = udpSocket()
+    closer.onExit {
+      socket.close()
+      selectorManager.close()
+    }
+
+    val transport = UdpOscTransport(socket)
+
+    val outputs = hostsWithPorts.map { (host, port) ->
+      transport.output(host, port)
+    }
+
+    val receiver = MultiReceiver(
+      outputs.mapIndexed { index, output ->
+        val scope = CoroutineScope(newSingleThreadContext("note-sender$index"))
+        closer.onExit { scope.cancel() }
+        AbletonNotesSendingReceiver(
+          Midi2AbletonNotesOscSender(output),
+          scope
+        )
+      }
+    )
+
+    with(midiDevice) {
+      open()
+      transmitter.receiver = receiver
+    }
+
+    runBlocking {
+      while (currentCoroutineContext().isActive) {
+        delay(100)
+      }
+    }
+
   }
 
 }

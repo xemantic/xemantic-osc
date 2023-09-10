@@ -18,38 +18,76 @@
 
 package com.xemantic.osc.ableton.tools
 
-import com.xemantic.osc.ableton.AbletonOscNotesReceivingMidiDevicePlayer
-import com.xemantic.osc.ableton.midi.listMidiDevices
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.restrictTo
+import com.xemantic.osc.ableton.midi.playOn
+import com.xemantic.osc.ableton.routeAbletonNotes
+import com.xemantic.osc.ableton.toAbletonNotes
+import com.xemantic.osc.oscInput
+import com.xemantic.osc.udp.UdpOscTransport
 import kotlinx.coroutines.runBlocking
+import javax.sound.midi.MidiDevice
 import javax.sound.midi.MidiSystem
-import kotlin.system.exitProcess
 
-fun main(args: Array<String>) = playAbletonNotesOnMidiDevice(args)
+fun main(args: Array<String>) = PlayAbletonNotesOnMidiDevice().main(args)
 
-fun playAbletonNotesOnMidiDevice(args: Array<String>) {
+@Suppress("MemberVisibilityCanBePrivate")
+class PlayAbletonNotesOnMidiDevice : CliktCommand(
+  help = "Receives notes sent by Ableton via OSC protocol " +
+      "and plays them back on the local MIDI device.",
+  printHelpOnEmptyArgs = true
+) {
 
-  println("Usage: playAbletonNotesOnMidiDevice osc_port midi_device_no")
+  val port: Int? by argument(
+    help = "The UDP/OSC port to listen to MIDI notes, random port if not specified"
+  ).int()
 
-  val deviceInfos = MidiSystem.getMidiDeviceInfo()
-  println(listMidiDevices(deviceInfos))
-
-  if (args.size < 2) {
-    exitProcess(1)
-  }
-
-  val oscPort = args[0].toInt()
-  val midiDeviceNo = args[1].toInt()
-  val deviceInfo = deviceInfos[midiDeviceNo]
-
-  val player = AbletonOscNotesReceivingMidiDevicePlayer(
-    oscPort = oscPort,
-    midiDevice = MidiSystem.getMidiDevice(deviceInfo)
+  val localhost: String? by option(
+    help = "The local interface to bind to, if omitted, it will listen on all the interfaces"
   )
+  val addressBase: String by option(
+    help = "The OSC address base, e.g.: /notes"
+  ).default("")
 
-  onExitClose(player)
+  private val deviceInfos: Array<MidiDevice.Info> = MidiSystem.getMidiDeviceInfo()
 
-  runBlocking {
-    player.start()
+  val midiDevice: Int by option(
+    help = "The MIDI synthesizer instrument index to use"
+  ).int().restrictTo(deviceInfos.indices).default(0)
+
+  override fun commandHelpEpilog(context: Context): String =
+    listMidiDevices(deviceInfos)
+
+  override fun run() {
+    val closer = Closer()
+    val deviceInfo = deviceInfos[midiDevice]
+    val device = closer.closeOnExit(
+      MidiSystem.getMidiDevice(deviceInfo)
+    )
+
+    val (selectorManager, socket) = udpSocket(localhost, port)
+    closer.onExit {
+      socket.close()
+      selectorManager.close()
+    }
+    val transport = UdpOscTransport(socket)
+
+    device.open()
+
+    runBlocking {
+      oscInput {
+        routeAbletonNotes(addressBase)
+        connect(transport)
+      }.messages
+        .toAbletonNotes(addressBase)
+        .playOn(device.receiver)
+    }
+
   }
 
 }
