@@ -148,7 +148,7 @@ class AbletonOscInputTest {
   fun shouldReceiveAbletonOscNotes() = runTest {
     // given
     val packets = MutableSharedFlow<OscDataPacket>()
-    val input = oscInput {
+    val input = OscInput {
       routeAbletonNotes()
     }
 
@@ -194,7 +194,7 @@ class AbletonOscInputTest {
     // given
     val addressBase = "/foo"
     val packets = MutableSharedFlow<OscDataPacket>()
-    val input = oscInput {
+    val input = OscInput {
       routeAbletonNotes(addressBase)
     }
 

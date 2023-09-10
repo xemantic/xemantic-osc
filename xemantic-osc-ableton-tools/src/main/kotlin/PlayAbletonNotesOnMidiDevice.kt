@@ -25,10 +25,10 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.restrictTo
+import com.xemantic.osc.OscInput
 import com.xemantic.osc.ableton.midi.playOn
 import com.xemantic.osc.ableton.routeAbletonNotes
 import com.xemantic.osc.ableton.toAbletonNotes
-import com.xemantic.osc.oscInput
 import com.xemantic.osc.udp.UdpOscTransport
 import kotlinx.coroutines.runBlocking
 import javax.sound.midi.MidiDevice
@@ -80,7 +80,7 @@ class PlayAbletonNotesOnMidiDevice : CliktCommand(
     device.open()
 
     runBlocking {
-      oscInput {
+      OscInput {
         routeAbletonNotes(addressBase)
         connect(transport)
       }.messages

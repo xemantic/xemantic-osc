@@ -23,10 +23,10 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
+import com.xemantic.osc.OscInput
 import com.xemantic.osc.ableton.midi.playOn
 import com.xemantic.osc.ableton.routeAbletonNotes
 import com.xemantic.osc.ableton.toAbletonNotes
-import com.xemantic.osc.oscInput
 import com.xemantic.osc.udp.UdpOscTransport
 import kotlinx.coroutines.*
 import javax.sound.midi.MidiSystem
@@ -80,7 +80,7 @@ class PlayAbletonNotesOnMidiSynthesizer : CliktCommand(
     channel.programChange(0, instrument)
 
     runBlocking {
-      oscInput {
+      OscInput {
         routeAbletonNotes(addressBase)
         connect(transport)
       }.messages
