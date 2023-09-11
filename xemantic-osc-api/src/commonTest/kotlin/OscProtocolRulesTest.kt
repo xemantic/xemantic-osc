@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2022 Kazimierz Pogoda
+ * Copyright (C) 2023 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -18,69 +18,73 @@
 
 package com.xemantic.osc
 
+import com.xemantic.osc.test.toBytes
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
-import io.ktor.utils.io.core.*
 import kotlin.test.Test
 
-class OscMessageWriterTest {
+private const val COMMA = ','.code.toByte()
+
+private const val F = 'f'.code.toByte()
+
+
+class OscProtocolRulesTest {
+
+  @Test
+  fun shouldWriteTypeTagPaddedWithZeroes() {
+    toBytes {
+      typeTag("f")
+    } shouldBe byteArrayOf(COMMA, F, 0, 0)
+    toBytes {
+      typeTag("ff")
+    } shouldBe byteArrayOf(COMMA, F, F, 0)
+    toBytes {
+      typeTag("fff")
+    } shouldBe byteArrayOf(COMMA, F, F, F, 0, 0, 0, 0)
+    toBytes {
+      typeTag("ffff")
+    } shouldBe byteArrayOf(COMMA, F, F, F, F, 0, 0, 0)
+  }
 
   @Test
   fun shouldThrowExceptionOnEmptyTypeTag() {
     shouldThrowWithMessage<IllegalArgumentException>(
-      "tag cannot be blank"
+      "typeTag cannot be blank"
     ) {
-      written { typeTag("") }
+      toBytes { typeTag("") }
     }
   }
 
   @Test
   fun shouldThrowExceptionOnBlankTypeTag() {
     shouldThrowWithMessage<IllegalArgumentException>(
-      "tag cannot be blank"
+      "typeTag cannot be blank"
     ) {
-      written { typeTag(" ") }
+      toBytes { typeTag(" \t") }
     }
   }
 
   @Test
-  fun shouldWriteTypeTagsOfVariousSizesWith4ByteAlignment() {
-    written {
-      typeTag("f")
-    } shouldBe byteArrayOf(COMMA_BYTE, FLOAT_BYTE, 0, 0)
-    written {
-      typeTag("ff")
-    } shouldBe byteArrayOf(COMMA_BYTE, FLOAT_BYTE, FLOAT_BYTE, 0)
-    written {
-      typeTag("fff")
-    } shouldBe byteArrayOf(COMMA_BYTE, FLOAT_BYTE, FLOAT_BYTE, FLOAT_BYTE, 0, 0, 0, 0)
-    written {
-      typeTag("ffff")
-    } shouldBe byteArrayOf(
-      COMMA_BYTE,
-      FLOAT_BYTE,
-      FLOAT_BYTE,
-      FLOAT_BYTE,
-      FLOAT_BYTE,
+  fun shouldWriteOscStrings() {
+
+    toBytes { string("OSC") } shouldBe byteArrayOf(
+      'O'.code.toByte(),
+      'S'.code.toByte(),
+      'C'.code.toByte(),
+      0
+    )
+
+    toBytes { string("data") } shouldBe byteArrayOf(
+      'd'.code.toByte(),
+      'a'.code.toByte(),
+      't'.code.toByte(),
+      'a'.code.toByte(),
+      0,
       0,
       0,
       0
     )
-  }
 
-  @Test
-  fun shouldWriteString() {
-    written {
-      string("a")
-    } shouldBe byteArrayOf('a'.code.toByte(), 0, 0, 0)
   }
 
 }
-
-private fun written(
-  value: Any? = null,
-  block: Osc.Message.Writer<*>.() -> Unit
-): ByteArray = buildPacket {
-  val oscWriter = Osc.Message.Writer(value, this)
-  block(oscWriter)
-}.readBytes()
