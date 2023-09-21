@@ -39,13 +39,39 @@ class AbletonNotesSendingReceiverTest {
   )
 
   @Test
-  fun `should send MIDI Receiver messages to OscOutput`() = runTest {
+  fun `should send MIDI Receiver messages to OscOutput when note on + velocity 0 = note off (default)`() = runTest {
     // given
     val output = TestOscOutput(peer)
     val receiver = AbletonNotesSendingReceiver(
       // note: sender could be also mocked, but TestOscOutput makes assertions cleaner
       sender = Midi2AbletonNotesOscSender(output),
       scope = this
+    )
+
+    // when
+    with (receiver) {
+      send(ShortMessage(NOTE_ON, 42, 100), -1)
+      send(ShortMessage(NOTE_ON, 42, 0), -1)
+    }
+    advanceUntilIdle()
+
+    output.messages shouldBe listOf(
+      "/Note1" to 42,
+      "/Velocity1" to 100,
+      "/Note1" to 42,
+      "/Velocity1" to 0,
+    )
+  }
+
+  @Test
+  fun `should send MIDI Receiver messages to OscOutput`() = runTest {
+    // given
+    val output = TestOscOutput(peer)
+    val receiver = AbletonNotesSendingReceiver(
+      // note: sender could be also mocked, but TestOscOutput makes assertions cleaner
+      sender = Midi2AbletonNotesOscSender(output),
+      scope = this,
+      sendNoteOffWhenReceivingNoteOnWithVelocity0 = false
     )
 
     // when

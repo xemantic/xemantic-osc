@@ -26,24 +26,37 @@ import javax.sound.midi.ShortMessage
 import javax.sound.midi.ShortMessage.NOTE_OFF
 import javax.sound.midi.ShortMessage.NOTE_ON
 
+/**
+ * The MIDI [Receiver] forwarding [com.xemantic.osc.ableton.AbletonNote]s
+ * to adapted [Midi2AbletonNotesOscSender].
+ *
+ * @param sender the actual OSC sender to adapt.
+ * @param scope the coroutine scope.
+ * @param sendNoteOffWhenReceivingNoteOnWithVelocity0 a flag indicating if NOTE_ON + velocity 0
+ *          message should be interpreted as `NOTE_OFF` message passed to the `sender`.
+ *          Many instruments will use this convention by default, so it defaults to true.
+ */
 public class AbletonNotesSendingReceiver(
   private val sender: Midi2AbletonNotesOscSender,
-  private val scope: CoroutineScope
+  private val scope: CoroutineScope,
+  private val sendNoteOffWhenReceivingNoteOnWithVelocity0: Boolean = true
 ) : Receiver {
 
   override fun send(message: MidiMessage, timeStamp: Long) {
     if (message is ShortMessage) {
-      message.sendOut()
-    }
-  }
-
-  private fun ShortMessage.sendOut() {
-    when (command) {
-      NOTE_ON -> scope.launch {
-        sender.noteOn(data1, data2)
-      }
-      NOTE_OFF -> scope.launch {
-        sender.noteOff(data1, data2)
+      val key = message.data1
+      val velocity = message.data2
+      when (message.command) {
+        NOTE_ON -> scope.launch {
+          if (sendNoteOffWhenReceivingNoteOnWithVelocity0 && velocity == 0) {
+            sender.noteOff(key, velocity)
+          } else {
+            sender.noteOn(key, velocity)
+          }
+        }
+        NOTE_OFF -> scope.launch {
+          sender.noteOff(key, velocity)
+        }
       }
     }
   }
