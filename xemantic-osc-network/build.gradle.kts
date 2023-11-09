@@ -72,7 +72,6 @@ kotlin {
         implementation(libs.kotlin.coroutines.test)
         implementation(libs.ktor.network)
         implementation(libs.kotest.assertions.core)
-
       }
     }
 
