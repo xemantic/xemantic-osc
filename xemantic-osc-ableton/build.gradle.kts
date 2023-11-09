@@ -26,13 +26,9 @@ kotlin {
 
   explicitApi()
 
-  jvm {
-    testRuns["test"].executionTask.configure {
-      useJUnitPlatform()
-    }
-  }
+  jvm {}
 
-  js(IR) {
+  js {
     browser {}
   }
 
@@ -40,9 +36,9 @@ kotlin {
   val isMingwX64 = hostOs.startsWith("Windows")
   @Suppress("UNUSED_VARIABLE")
   val nativeTarget = when {
-    hostOs == "Mac OS X" -> macosX64("native")
-    hostOs == "Linux" -> linuxX64("native")
-    isMingwX64 -> mingwX64("native")
+    hostOs == "Mac OS X" -> macosX64()
+    hostOs == "Linux" -> linuxX64()
+    isMingwX64 -> mingwX64()
     else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
   }
 
@@ -51,29 +47,29 @@ kotlin {
     all {
       languageSettings {
         languageVersion = libs.versions.kotlinLanguageVersion.get()
-        optIn("kotlin.ExperimentalStdlibApi," +
-            "kotlinx.coroutines.ExperimentalCoroutinesApi," +
-            "kotlinx.coroutines.DelicateCoroutinesApi"
-        )
+        apiVersion = libs.versions.kotlinLanguageVersion.get()
+        progressiveMode = true
+        optIn("kotlin.ExperimentalStdlibApi")
       }
     }
 
-    val commonMain by getting {
+    commonMain {
       dependencies {
         implementation(project(":xemantic-osc-api"))
         implementation(libs.kotlin.logging)
       }
     }
 
-    val commonTest by getting {
+    commonTest {
       dependencies {
         implementation(project(":xemantic-osc-test"))
         implementation(libs.kotlin.test)
+        implementation(libs.kotlin.coroutines.test)
         implementation(libs.kotest.assertions.core)
       }
     }
 
-    val jvmMain by getting {
+    jvmMain {
       dependencies {
         runtimeOnly(libs.log4j.slf4j2)
         runtimeOnly(libs.log4j.core)
@@ -82,7 +78,7 @@ kotlin {
       }
     }
 
-    val jvmTest by getting {
+    jvmTest {
       dependencies {
         implementation(libs.mockk)
       }
