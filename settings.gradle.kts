@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2022 Kazimierz Pogoda
+ * Copyright (C) 2023 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -19,7 +19,13 @@
 rootProject.name = "xemantic-osc"
 
 include(
+  "xemantic-osc-collections",
   "xemantic-osc-api",
-  "xemantic-osc-udp",
+  "xemantic-osc-test",
+  "xemantic-osc-network",
+  "xemantic-osc-query",
+  "xemantic-osc-websockets",
+  "xemantic-osc-ableton",
+  "xemantic-osc-ableton-tools",
   "xemantic-osc-demo"
 )
