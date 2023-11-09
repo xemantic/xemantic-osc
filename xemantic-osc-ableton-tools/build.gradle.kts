@@ -29,6 +29,8 @@ kotlin {
     all {
       languageSettings {
         languageVersion = libs.versions.kotlinLanguageVersion.get()
+        apiVersion = libs.versions.kotlinLanguageVersion.get()
+        progressiveMode = true
         optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
         optIn("kotlinx.coroutines.DelicateCoroutinesApi")
       }
