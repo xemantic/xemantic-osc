@@ -48,5 +48,5 @@ dependencies {
 }
 
 application {
-  mainClass = "com.xemantic.osc.ableton.tools.AbletonToolsKt" // The main class of the application
+  mainClass.set("com.xemantic.osc.ableton.tools.AbletonToolsKt")
 }
