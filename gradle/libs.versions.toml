@@ -52,5 +52,5 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-gradle-versions-plugin = { id = "com.github.ben-manes.versions", version.ref = "gradleVersionsPlugin" }
+versions = { id = "com.github.ben-manes.versions", version.ref = "gradleVersionsPlugin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadowPlugin" }
