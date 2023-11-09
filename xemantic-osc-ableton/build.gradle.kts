@@ -50,6 +50,7 @@ kotlin {
         apiVersion = libs.versions.kotlinLanguageVersion.get()
         progressiveMode = true
         optIn("kotlin.ExperimentalStdlibApi")
+        optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
       }
     }
 
