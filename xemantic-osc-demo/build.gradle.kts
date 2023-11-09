@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2022 Kazimierz Pogoda
+ * Copyright (C) 2023 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,56 +16,63 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+plugins {
+  alias(libs.plugins.kotlin.multiplatform)
+  alias(libs.plugins.dokka)
+  `maven-publish`
+}
+
 kotlin {
 
-  jvm {
-    testRuns["test"].executionTask.configure {
-      useJUnitPlatform()
-    }
+  jvm {}
+
+  val hostOs = System.getProperty("os.name")
+  val isMingwX64 = hostOs.startsWith("Windows")
+  @Suppress("UNUSED_VARIABLE")
+  val nativeTarget = when {
+    hostOs == "Mac OS X" -> macosX64()
+    hostOs == "Linux" -> linuxX64()
+    isMingwX64 -> mingwX64()
+    else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
   }
 
-//  val hostOs = System.getProperty("os.name")
-//  val isMingwX64 = hostOs.startsWith("Windows")
-//  val nativeTarget = when {
-//    hostOs == "Mac OS X" -> macosX64("native")
-//    hostOs == "Linux" -> linuxX64("native")
-//    isMingwX64 -> mingwX64("native")
-//    else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-//  }
+  applyDefaultHierarchyTemplate()
 
   sourceSets {
 
-    val commonMain by getting {
+    all {
+      languageSettings {
+        languageVersion = libs.versions.kotlinLanguageVersion.get()
+        apiVersion = libs.versions.kotlinLanguageVersion.get()
+        progressiveMode = true
+      }
+    }
+
+    val jvmAndNativeMain by creating {
+      dependsOn(commonMain.get())
       dependencies {
         implementation(project(":xemantic-osc-api"))
+        implementation(project(":xemantic-osc-network"))
         implementation(libs.kotlin.logging)
+        runtimeOnly(project(":xemantic-osc-collections"))
+        runtimeOnly(libs.ktor.network)
       }
     }
 
-    val jvmMain by getting {
+    jvmMain {
+      dependsOn(jvmAndNativeMain)
       dependencies {
-        implementation(project(":xemantic-osc-udp"))
-        runtimeOnly(libs.slf4j.simple)
-        //implementation(libs.kotlin.coroutines)
+        runtimeOnly(libs.log4j.slf4j2)
+        runtimeOnly(libs.log4j.core)
+        runtimeOnly(libs.jackson.databind)
+        runtimeOnly(libs.jackson.json)
       }
     }
 
-//    val linuxX64Main by getting {
-//      dependencies {
-//        implementation(project(":xemantic-osc-udp"))
-//        //implementation(libs.kotlin.coroutines)
-//      }
-//    }
-
-    /*
-    val jvmAndNativeMain by getting {
-      dependsOn(nativeMain)
-      dependencies {
-        implementation(project(":xemantic-osc-udp"))
-      }
+    nativeMain {
+      dependsOn(jvmAndNativeMain)
     }
 
-     */
   }
 
 }
