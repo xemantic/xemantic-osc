@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2022 Kazimierz Pogoda
+ * Copyright (C) 2023 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,45 +16,69 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+plugins {
+  alias(libs.plugins.kotlin.multiplatform)
+  alias(libs.plugins.dokka)
+  `maven-publish`
+}
+
 kotlin {
 
-  jvm {
-    testRuns["test"].executionTask.configure {
-      useJUnitPlatform()
-    }
-  }
+  explicitApi()
 
-  js(IR) {
-    browser {
+  jvm {}
 
-    }
+  js {
+    browser {}
   }
 
   val hostOs = System.getProperty("os.name")
   val isMingwX64 = hostOs.startsWith("Windows")
+  @Suppress("UNUSED_VARIABLE")
   val nativeTarget = when {
-    hostOs == "Mac OS X" -> macosX64("native")
-    hostOs == "Linux" -> linuxX64("native")
-    isMingwX64 -> mingwX64("native")
+    hostOs == "Mac OS X" -> macosX64()
+    hostOs == "Linux" -> linuxX64()
+    isMingwX64 -> mingwX64()
     else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
   }
 
   sourceSets {
 
-    val commonMain by getting {
+    all {
+      languageSettings {
+        languageVersion = libs.versions.kotlinLanguageVersion.get()
+        apiVersion = libs.versions.kotlinLanguageVersion.get()
+        progressiveMode = true
+        optIn("kotlin.ExperimentalStdlibApi")
+        optIn("kotlin.ExperimentalUnsignedTypes")
+        optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+      }
+    }
+
+    commonMain {
       dependencies {
-        // coroutine Flow is exposed by xemantic-state API
-        api(libs.kotlin.coroutines)
-        api(libs.ktor.io)
+        api(libs.kotlin.coroutines) // Flow is exposed by xemantic-osc API
+        implementation(libs.kotlin.datetime)
+        implementation(project(":xemantic-osc-collections"))
+        implementation(libs.ktor.io)
         implementation(libs.kotlin.logging)
       }
     }
 
-    val commonTest by getting {
+    commonTest {
       dependencies {
         implementation(libs.kotlin.test)
         implementation(libs.kotlin.coroutines.test)
         implementation(libs.kotest.assertions.core)
+      }
+    }
+
+    jvmTest  {
+      dependencies {
+        runtimeOnly(libs.log4j.slf4j2)
+        runtimeOnly(libs.log4j.core)
+        runtimeOnly(libs.jackson.databind)
+        runtimeOnly(libs.jackson.json)
       }
     }
 
