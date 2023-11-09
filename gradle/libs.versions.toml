@@ -1,29 +1,31 @@
 [versions]
-kotlin = "1.9.10"
+kotlin = "1.9.20"
 kotlinLanguageVersion = "1.9"
-jvmTarget = "11"
-dokka = "1.8.20"
+jvmTarget = "21"
+dokka = "1.9.10"
 kotlinCoroutines = "1.7.3"
 kotlinSerialization = "1.6.0"
-clikt = "4.2.0"
+kotlinDatetime = "0.4.1"
+clikt = "4.2.1"
 kotlinLogging = "5.1.0"
 slf4j = "2.0.7"
-log4j = "2.20.0"
-jackson = "2.15.2"
+log4j = "2.21.1"
+jackson = "2.15.3"
 
-ktor = "2.3.3"
+ktor = "2.3.6"
 
-kotest = "5.6.2"
+kotest = "5.8.0"
 junitJupiter = "5.9.0"
-mockk = "1.13.7"
+mockk = "1.13.8"
 
-gradleVersionsPlugin = "0.47.0"
+gradleVersionsPlugin = "0.49.0"
 shadowPlugin = "8.1.1"
 
 [libraries]
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinDatetime" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlin" }
 
@@ -38,7 +40,6 @@ jackson-json = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dat
 
 ktor-io = { module = "io.ktor:ktor-io", version.ref = "ktor" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
-ktor-websockets = { module = "io.ktor:ktor-websockets", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 
@@ -49,8 +50,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.serialization", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 gradle-versions-plugin = { id = "com.github.ben-manes.versions", version.ref = "gradleVersionsPlugin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadowPlugin" }
