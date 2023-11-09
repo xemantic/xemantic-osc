@@ -67,10 +67,12 @@ kotlin {
       dependencies {
         implementation(project(":xemantic-osc-test"))
         implementation(project(":xemantic-osc-api"))
-        implementation(libs.ktor.network)
-        implementation(libs.kotest.assertions.core)
         implementation(libs.kotlin.logging)
         implementation(libs.kotlin.test)
+        implementation(libs.kotlin.coroutines.test)
+        implementation(libs.ktor.network)
+        implementation(libs.kotest.assertions.core)
+
       }
     }
 
@@ -78,7 +80,12 @@ kotlin {
       dependsOn(jvmAndNativeMain)
     }
 
+    nativeMain {
+      dependsOn(jvmAndNativeMain)
+    }
+
     jvmTest {
+      dependsOn(jvmAndNativeTest)
       dependencies {
         runtimeOnly(libs.log4j.slf4j2)
         runtimeOnly(libs.log4j.core)
@@ -87,8 +94,8 @@ kotlin {
       }
     }
 
-    nativeMain {
-      dependsOn(jvmAndNativeMain)
+    nativeTest {
+      dependsOn(jvmAndNativeTest)
     }
 
   }
