@@ -29,8 +29,8 @@ kotlin {
     all {
       languageSettings {
         languageVersion = libs.versions.kotlinLanguageVersion.get()
-        optIn("kotlinx.coroutines.ExperimentalCoroutinesApi," +
-            "kotlinx.coroutines.DelicateCoroutinesApi")
+        optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+        optIn("kotlinx.coroutines.DelicateCoroutinesApi")
       }
     }
   }
