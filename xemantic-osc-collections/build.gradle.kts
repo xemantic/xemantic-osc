@@ -26,13 +26,9 @@ kotlin {
 
   explicitApi()
 
-  jvm {
-    testRuns["test"].executionTask.configure {
-      useJUnitPlatform()
-    }
-  }
+  jvm {}
 
-  js(IR) {
+  js {
     browser {}
   }
 
@@ -40,9 +36,9 @@ kotlin {
   val isMingwX64 = hostOs.startsWith("Windows")
   @Suppress("UNUSED_VARIABLE")
   val nativeTarget = when {
-    hostOs == "Mac OS X" -> macosX64("native")
-    hostOs == "Linux" -> linuxX64("native")
-    isMingwX64 -> mingwX64("native")
+    hostOs == "Mac OS X" -> macosX64()
+    hostOs == "Linux" -> linuxX64()
+    isMingwX64 -> mingwX64()
     else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
   }
 
@@ -51,12 +47,12 @@ kotlin {
     all {
       languageSettings {
         languageVersion = libs.versions.kotlinLanguageVersion.get()
+        apiVersion = libs.versions.kotlinLanguageVersion.get()
+        progressiveMode = true
       }
     }
 
-    val commonMain by getting
-
-    val commonTest by getting {
+    commonTest {
       dependencies {
         implementation(libs.kotlin.test)
         implementation(libs.kotest.assertions.core)
