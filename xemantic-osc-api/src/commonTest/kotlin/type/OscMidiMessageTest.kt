@@ -22,31 +22,35 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
-class OscColorTest {
+class OscMidiMessageTest {
 
   @Test
-  fun shouldCreateOscColorFromComponents() {
-    OscColor(r = 1u, g = 2u, b = 3u, a = 4u).apply {
-      r shouldBe 1u
-      g shouldBe 2u
-      b shouldBe 3u
-      a shouldBe 4u
+  fun shouldCreateOscMidiMessageFromComponents() {
+    OscMidiMessage(
+      portId = 1u,
+      statusByte = 2u,
+      data1 = 3u, data2 = 4u
+    ).apply {
+      portId shouldBe 1u
+      statusByte shouldBe 2u
+      data1 shouldBe 3u
+      data2 shouldBe 4u
     }
   }
 
   @Test
-  fun shouldCreateOscColorFromInt() {
-    OscColor(0x01020304u).apply {
-      r shouldBe 1u
-      g shouldBe 2u
-      b shouldBe 3u
-      a shouldBe 4u
+  fun shouldCreateOscMidiMessageFromInt() {
+    OscMidiMessage(0x01020304u).apply {
+      portId shouldBe 1u
+      statusByte shouldBe 2u
+      data1 shouldBe 3u
+      data2 shouldBe 4u
     }
   }
 
   @Test
-  fun colorsShouldBeEqual() {
-    OscColor(0x01020304u) shouldBeEqual OscColor(1u, 2u, 3u, 4u)
+  fun midiMessagesShouldBeEqual() {
+    OscMidiMessage(0x01020304u) shouldBeEqual OscMidiMessage(1u, 2u, 3u, 4u)
   }
 
 }

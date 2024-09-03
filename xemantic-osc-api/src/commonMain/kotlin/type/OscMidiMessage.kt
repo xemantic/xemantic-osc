@@ -18,35 +18,28 @@
 
 package com.xemantic.osc.type
 
-import io.kotest.matchers.equals.shouldBeEqual
-import io.kotest.matchers.shouldBe
-import kotlin.test.Test
+import kotlin.jvm.JvmInline
 
-class OscColorTest {
+@JvmInline
+public value class OscMidiMessage(
+  public val message: UInt
+) {
 
-  @Test
-  fun shouldCreateOscColorFromComponents() {
-    OscColor(r = 1u, g = 2u, b = 3u, a = 4u).apply {
-      r shouldBe 1u
-      g shouldBe 2u
-      b shouldBe 3u
-      a shouldBe 4u
-    }
-  }
+  public constructor(
+    portId: UByte,
+    statusByte: UByte,
+    data1: UByte,
+    data2: UByte
+  ) : this(
+    (portId.toUInt() shl 24) or
+        (statusByte.toUInt() shl 16) or
+        (data1.toUInt() shl 8) or
+        data2.toUInt()
+  )
 
-  @Test
-  fun shouldCreateOscColorFromInt() {
-    OscColor(0x01020304u).apply {
-      r shouldBe 1u
-      g shouldBe 2u
-      b shouldBe 3u
-      a shouldBe 4u
-    }
-  }
-
-  @Test
-  fun colorsShouldBeEqual() {
-    OscColor(0x01020304u) shouldBeEqual OscColor(1u, 2u, 3u, 4u)
-  }
+  public val portId: UByte get() = ((message shr 24) and 0xFFu).toUByte()
+  public val statusByte: UByte get() = ((message shr 16) and 0xFFu).toUByte()
+  public val data1: UByte get() = ((message shr 8) and 0xFFu).toUByte()
+  public val data2: UByte get() = (message and 0xFFu).toUByte()
 
 }
