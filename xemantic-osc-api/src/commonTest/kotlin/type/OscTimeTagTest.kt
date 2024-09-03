@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2023 Kazimierz Pogoda
+ * Copyright (C) 2024 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,8 +16,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.xemantic.osc
+package com.xemantic.osc.type
 
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.longs.between
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.*
@@ -36,12 +37,14 @@ class OscTimeTagTest {
 
     // then
     timeTag.immediate shouldBe false
-    date.year shouldBe 1900
-    date.month shouldBe Month.JANUARY
-    date.dayOfMonth shouldBe 1
-    date.hour shouldBe 0
-    date.minute shouldBe 0
-    date.second shouldBe 0
+    date.apply {
+      year shouldBe 1900
+      month shouldBe Month.JANUARY
+      dayOfMonth shouldBe 1
+      hour shouldBe 0
+      minute shouldBe 0
+      second shouldBe 0
+    }
   }
 
   @Test
@@ -51,8 +54,6 @@ class OscTimeTagTest {
 
     // then
     timeTag.immediate shouldBe true
-    val now = Clock.System.now().toEpochMilliseconds()
-    timeTag.asMillis shouldBe between(now - 1L, now + 1L)
   }
 
   @Test
@@ -61,9 +62,11 @@ class OscTimeTagTest {
     val timeTag = OscTimeTag.IMMEDIATE
 
     // then
-    timeTag.immediate shouldBe true
-    val now = Clock.System.now().toEpochMilliseconds()
-    timeTag.asMillis shouldBe between(now - 1L, now + 1L)
+    timeTag.apply {
+      immediate shouldBe true
+      seconds shouldBe 0u
+      fraction shouldBe 1u
+    }
   }
 
   @Test
@@ -76,6 +79,27 @@ class OscTimeTagTest {
 
     // then
     timeTag.asMillis shouldBe between(now - 1L, now + 1L)
+  }
+
+  @Test
+  fun shouldCreateOscTimeTagFromComponents() {
+    OscTimeTag(seconds = 1u, fraction = 2u).apply {
+      seconds shouldBe 1u
+      fraction shouldBe 2u
+    }
+  }
+
+  @Test
+  fun shouldCreateOscTimeTagFromULong() {
+    OscTimeTag(0x0000000100000002u).apply {
+      seconds shouldBe 1u
+      fraction shouldBe 2u
+    }
+  }
+
+  @Test
+  fun timeTagsShouldBeEqual() {
+    OscTimeTag(0x0000000100000002u) shouldBeEqual OscTimeTag(1u, 2u)
   }
 
 }

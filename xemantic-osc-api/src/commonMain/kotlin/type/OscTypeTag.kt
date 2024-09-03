@@ -19,25 +19,41 @@
 package com.xemantic.osc.type
 
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmInline
 
 private const val NTP_EPOCH_OFFSET_SECONDS = 2208988800L
 
 /**
  * OSC-timetag as described in the
  * [protocol specification](https://opensoundcontrol.stanford.edu/spec-1_0.html#timetags).
+ *
+ * @param timeTag the time tag as 64-bit unsigned integer.
  */
-public data class OscTimeTag(
-  val seconds: UInt,  // Using Long to prevent overflow.
-  val fraction: UInt  // 1/2^32 fractional seconds
-) {
+@JvmInline
+public value class OscTimeTag(public val timeTag: ULong) {
+
+  /**
+   * OSC-timetag as described in the
+   * [protocol specification](https://opensoundcontrol.stanford.edu/spec-1_0.html#timetags).
+   *
+   * @param seconds the seconds int.
+   * @param fraction the fraction int.
+   */
+  public constructor(seconds: UInt, fraction: UInt) : this(
+    (seconds.toULong() shl 32) or fraction.toULong()
+  )
+
+  public inline val seconds: UInt get() = (timeTag shr 32).toUInt()
+
+  public inline val fraction: UInt get() = (timeTag and 0xFFFFFFFFu).toUInt()
 
   public inline val immediate: Boolean
-    get() = (seconds == 0u) && (fraction == 1u)
+    get() = timeTag == 1.toULong()
 
   /**
    * Converts the OSC Time Tag to Unix milliseconds.
    */
-  val asMillis: Long get() {
+  public val asMillis: Long get() {
     if (immediate) return Clock.System.now().toEpochMilliseconds()
     val unixSeconds = seconds.toLong() - NTP_EPOCH_OFFSET_SECONDS
     val millisFraction = (fraction.toLong() * 1000L) / 0x100000000L  // Convert NTP fraction to milliseconds
@@ -70,7 +86,3 @@ public data class OscTimeTag(
   }
 
 }
-
-
-
-
