@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2023 Kazimierz Pogoda
+ * Copyright (C) 2024 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,21 +16,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-plugins {
-  kotlin("jvm")
-  alias(libs.plugins.dokka)
-  alias(libs.plugins.shadow)
-  `maven-publish`
-  application
-}
-
 kotlin {
   sourceSets {
     all {
       languageSettings {
-        languageVersion = libs.versions.kotlinLanguageVersion.get()
-        apiVersion = libs.versions.kotlinLanguageVersion.get()
-        progressiveMode = true
         optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
         optIn("kotlinx.coroutines.DelicateCoroutinesApi")
       }

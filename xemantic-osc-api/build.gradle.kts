@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2023 Kazimierz Pogoda
+ * Copyright (C) 2024 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -15,12 +15,6 @@
  * You should have received a copy of the GNU Lesser General Public License along with xemantic-osc.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
-plugins {
-  alias(libs.plugins.kotlin.multiplatform)
-  alias(libs.plugins.dokka)
-  `maven-publish`
-}
 
 kotlin {
 
@@ -46,9 +40,6 @@ kotlin {
 
     all {
       languageSettings {
-        languageVersion = libs.versions.kotlinLanguageVersion.get()
-        apiVersion = libs.versions.kotlinLanguageVersion.get()
-        progressiveMode = true
         optIn("kotlin.ExperimentalStdlibApi")
         optIn("kotlin.ExperimentalUnsignedTypes")
         optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
@@ -60,7 +51,7 @@ kotlin {
         api(libs.kotlin.coroutines) // Flow is exposed by xemantic-osc API
         implementation(libs.kotlin.datetime)
         implementation(project(":xemantic-osc-collections"))
-        implementation(libs.ktor.io)
+        implementation(libs.kotlinx.io.core)
         implementation(libs.kotlin.logging)
       }
     }

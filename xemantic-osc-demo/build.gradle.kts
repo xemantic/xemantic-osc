@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2023 Kazimierz Pogoda
+ * Copyright (C) 2024 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -15,12 +15,6 @@
  * You should have received a copy of the GNU Lesser General Public License along with xemantic-osc.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
-plugins {
-  alias(libs.plugins.kotlin.multiplatform)
-  alias(libs.plugins.dokka)
-  `maven-publish`
-}
 
 kotlin {
 
@@ -39,14 +33,6 @@ kotlin {
   applyDefaultHierarchyTemplate()
 
   sourceSets {
-
-    all {
-      languageSettings {
-        languageVersion = libs.versions.kotlinLanguageVersion.get()
-        apiVersion = libs.versions.kotlinLanguageVersion.get()
-        progressiveMode = true
-      }
-    }
 
     val jvmAndNativeMain by creating {
       dependsOn(commonMain.get())
