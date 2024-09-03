@@ -37,9 +37,9 @@ public value class OscMidiMessage(
         data2.toUInt()
   )
 
-  public val portId: UByte get() = ((message shr 24) and 0xFFu).toUByte()
-  public val statusByte: UByte get() = ((message shr 16) and 0xFFu).toUByte()
-  public val data1: UByte get() = ((message shr 8) and 0xFFu).toUByte()
-  public val data2: UByte get() = (message and 0xFFu).toUByte()
+  public inline val portId: UByte get() = ((message shr 24) and 0xFFu).toUByte()
+  public inline val statusByte: UByte get() = ((message shr 16) and 0xFFu).toUByte()
+  public inline val data1: UByte get() = ((message shr 8) and 0xFFu).toUByte()
+  public inline val data2: UByte get() = (message and 0xFFu).toUByte()
 
 }

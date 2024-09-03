@@ -32,9 +32,9 @@ public value class OscColor(
         a.toUInt()
   )
 
-  public val r: UByte get() = ((rgba shr 24) and 0xFFu).toUByte()
-  public val g: UByte get() = ((rgba shr 16) and 0xFFu).toUByte()
-  public val b: UByte get() = ((rgba shr 8) and 0xFFu).toUByte()
-  public val a: UByte get() = (rgba and 0xFFu).toUByte()
+  public inline val r: UByte get() = ((rgba shr 24) and 0xFFu).toUByte()
+  public inline val g: UByte get() = ((rgba shr 16) and 0xFFu).toUByte()
+  public inline val b: UByte get() = ((rgba shr 8) and 0xFFu).toUByte()
+  public inline val a: UByte get() = (rgba and 0xFFu).toUByte()
 
 }
