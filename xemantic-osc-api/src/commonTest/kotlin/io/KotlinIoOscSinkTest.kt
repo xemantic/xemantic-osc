@@ -18,6 +18,7 @@
 
 package com.xemantic.osc.io
 
+import com.xemantic.osc.OscTimeTag
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import com.xemantic.osc.byteArrayOf
@@ -27,27 +28,18 @@ class KotlinIoOscSinkTest {
 
   @Test
   fun shouldWriteOscPadding() {
-
-    writeToBytes {} shouldBe byteArrayOf()
-
-    writeToBytes {
-      writeOscPadding(1)
-    } shouldBe byteArrayOf(0, 0, 0)
-
-    writeToBytes {
-      writeOscPadding(2)
-    } shouldBe byteArrayOf(0, 0)
-
-    writeToBytes {
-      writeOscPadding(3)
-    } shouldBe byteArrayOf(0)
-
-    writeToBytes {
-      writeOscPadding(4)
-    } shouldBe byteArrayOf()
-
+    writeToBytes { writeOscPadding(0) } shouldBe byteArrayOf()
+    writeToBytes { writeOscPadding(1) } shouldBe byteArrayOf(0, 0, 0)
+    writeToBytes { writeOscPadding(2) } shouldBe byteArrayOf(0, 0)
+    writeToBytes { writeOscPadding(3) } shouldBe byteArrayOf(0)
+    writeToBytes { writeOscPadding(4) } shouldBe byteArrayOf()
   }
 
+  /**
+   * Some test cases taken from OSC protocol specification:
+   *
+   * https://opensoundcontrol.stanford.edu/spec-1_0-examples.html
+   */
   @Test
   fun shouldWriteOscString() {
 
@@ -56,58 +48,50 @@ class KotlinIoOscSinkTest {
     } shouldBe byteArrayOf(0, 0, 0, 0)
 
     writeToBytes {
-      writeOscString("a")
+      writeOscString("OSC")
     } shouldBe byteArrayOf(
-      'a', ZERO, ZERO, ZERO
+      'O', 'S', 'C', ZERO
     )
 
     writeToBytes {
-      writeOscString("ab")
+      writeOscString("data")
     } shouldBe byteArrayOf(
-      'a', 'b', ZERO, ZERO
+      'd', 'a', 't', 'a', ZERO, ZERO, ZERO, ZERO
     )
 
     writeToBytes {
-      writeOscString("abc")
+      writeOscString("data+")
     } shouldBe byteArrayOf(
-      'a', 'b', 'c', ZERO
-    )
-
-    writeToBytes {
-      writeOscString("abcd")
-    } shouldBe byteArrayOf(
-      'a', 'b', 'c', 'd', ZERO, ZERO, ZERO, ZERO
-    )
-
-    writeToBytes {
-      writeOscString("abcde")
-    } shouldBe byteArrayOf(
-      'a', 'b', 'c', 'd', 'e', ZERO, ZERO, ZERO
+      'd', 'a', 't', 'a', '+', ZERO, ZERO, ZERO
     )
 
   }
 
   @Test
   fun shouldWriteOscChar() {
-
     writeToBytes {
       writeOscChar('a')
     } shouldBe byteArrayOf(
       ZERO, ZERO, ZERO, 'a'
     )
+  }
 
+  @Test
+  fun shouldWriteOscCharWithPolishDiacritics() {
     writeToBytes {
       writeOscChar('ą')
     } shouldBe byteArrayOf(
       0, 0, 1, 5
     )
+  }
 
+  @Test
+  fun shouldWriteMandarinOscChar() {
     writeToBytes {
       writeOscChar('你')
     } shouldBe byteArrayOf(
       0, 0, 79, 96
     )
-
   }
 
   @Test
@@ -116,33 +100,49 @@ class KotlinIoOscSinkTest {
     writeToBytes {
       writeOscBlob(byteArrayOf('a'))
     } shouldBe byteArrayOf(
-      97, 0, 0, 0
+      0, 0, 0, 1, 97, 0, 0, 0
     )
 
     writeToBytes {
       writeOscBlob(byteArrayOf('a', 'b'))
     } shouldBe byteArrayOf(
-      97, 98, 0, 0
+      0, 0, 0, 2, 97, 98, 0, 0
     )
 
     writeToBytes {
       writeOscBlob(byteArrayOf('a', 'b', 'c'))
     } shouldBe byteArrayOf(
-      97, 98, 99, 0
+      0, 0, 0, 3, 97, 98, 99, 0
     )
 
     writeToBytes {
       writeOscBlob(byteArrayOf('a', 'b', 'c', 'd'))
     } shouldBe byteArrayOf(
-      97, 98, 99, 100
+      0, 0, 0, 4, 97, 98, 99, 100
     )
 
     writeToBytes {
       writeOscBlob(byteArrayOf('a', 'b', 'c', 'd', 'e'))
     } shouldBe byteArrayOf(
-      97, 98, 99, 100, 101, 0, 0, 0
+      0, 0, 0, 5, 97, 98, 99, 100, 101, 0, 0, 0
     )
 
   }
+
+  @Test
+  fun shouldWriteOscTimeTag() {
+    writeToBytes {
+      writeOscTimeTag(OscTimeTag(1u, 2u))
+    } shouldBe byteArrayOf(0, 0, 0, 1, 0, 0, 0, 2)
+  }
+
+  @Test
+  fun shouldWriteImmediateOscTimeTag() {
+    writeToBytes {
+      writeOscTimeTag(OscTimeTag.IMMEDIATE)
+    } shouldBe byteArrayOf(0, 0, 0, 0, 0, 0, 0, 1)
+  }
+
+
 
 }

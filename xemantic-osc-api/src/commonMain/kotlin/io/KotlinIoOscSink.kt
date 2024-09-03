@@ -23,17 +23,6 @@ import com.xemantic.osc.oscPadding
 import kotlinx.io.*
 
 /**
- * Transforms a sequence of writes to given [Sink] into a [ByteArray].
- * Useful for testing.
- *
- * @param block the sequence of writes to the [Sink]
- * @return the byte array of data written to the [Sink].
- */
-public fun writeToBytes(
-  block: Sink.() -> Unit
-): ByteArray = Buffer().apply(block).readByteArray()
-
-/**
  * Writes padding of the data of given [size], according to
  * OSC protocol padding rules. The padding is aligned to 4-byte
  * chunks.
@@ -81,6 +70,7 @@ public fun Sink.writeOscChar(char: Char) {
  * @see writeOscPadding
  */
 public fun Sink.writeOscBlob(blob: ByteArray) {
+  writeInt(blob.size)
   write(blob)
   writeOscPadding(blob.size)
 }
@@ -94,3 +84,14 @@ public fun Sink.writeOscTimeTag(timeTag: OscTimeTag) {
   writeUInt(timeTag.seconds)
   writeUInt(timeTag.fraction)
 }
+
+/**
+ * Transforms a sequence of writes to given [Sink] into a [ByteArray].
+ * Useful for testing.
+ *
+ * @param block the sequence of writes to the [Sink]
+ * @return the byte array of data written to the [Sink].
+ */
+public fun writeToBytes(
+  block: Sink.() -> Unit
+): ByteArray = Buffer().apply(block).readByteArray()
