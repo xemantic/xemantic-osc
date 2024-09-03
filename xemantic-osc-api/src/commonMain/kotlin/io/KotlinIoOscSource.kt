@@ -24,6 +24,63 @@ import com.xemantic.osc.oscPadding
 import kotlinx.io.*
 
 /**
+ * Removes bytes from this source interpreting them as OSC String.
+ * The OSC String should be `0`-terminated and padded up to 4 bytes.
+ *
+ * @return the OSC String.
+ * @throws OscInputException on unexpected input data.
+ * @throws EOFException on unexpected input data.
+ */
+public fun Source.readOscString(): String {
+  val terminatorIndex = indexOf(0.toByte())
+  if (terminatorIndex == -1L) {
+    throw OscInputException(
+      "Cannot read OSC String, because byte sequence is not 0-terminated"
+    )
+  }
+  val string = readString(terminatorIndex)
+  if (terminatorIndex % 4L == 0L) {
+    skip(4)
+  } else {
+    skip(oscPadding(terminatorIndex))
+  }
+  return string
+}
+
+/**
+ * Removes 4 bytes from this source, interpreting them as OSC char.
+ *
+ * @return the OSC Char.
+ * @throws EOFException on unexpected input data.
+ */
+public fun Source.readOscChar(): Char = readInt().toChar()
+
+/**
+ * Removes data from this source interpreting them as OSC blob.
+ * The first 4-bytes encode an [Int] describing the size of the blob.
+ *
+ * @return the OSC Blob.
+ * @throws EOFException on unexpected input data.
+ */
+public fun Source.readOscBlob(): ByteArray {
+  val size = readInt()
+  val blob = readByteArray(size)
+  skip(oscPadding(size).toLong())
+  return blob
+}
+
+/**
+ * Removes 8 bytes from this source, interpreting them as OSC time tag.
+ *
+ * @return the OSC Time Tag.
+ * @throws EOFException on insufficient input data.
+ */
+public fun Source.readOscTimeTag(): OscTimeTag = OscTimeTag(
+  seconds = readUInt(),
+  fraction = readUInt()
+)
+
+/**
  * Creates a [Source] from supplied bytes.
  * Useful for testing.
  *
@@ -50,55 +107,3 @@ public fun Source(
     }.toByteArray()
   )
 }
-
-/**
- * Removes bytes from this source interpreting them as OSC String.
- * The OSC String should be `0`-terminated and padded up to 4 bytes.
- *
- * @return the OSC String.
- */
-public fun Source.readOscString(): String {
-  val terminatorIndex = indexOf(0.toByte())
-  if (terminatorIndex == -1L) {
-    throw OscInputException(
-      "Cannot read OSC String, because byte sequence is not 0-terminated"
-    )
-  }
-  val string = readString(terminatorIndex)
-  if (terminatorIndex % 4L == 0L) {
-    skip(4)
-  } else {
-    skip(oscPadding(terminatorIndex))
-  }
-  return string
-}
-
-/**
- * Removes 4 bytes from this source, interpreting them as OSC char.
- *
- * @return the OSC Char.
- */
-public fun Source.readOscChar(): Char = readInt().toChar()
-
-/**
- * Removes data from this source interpreting them as OSC blob.
- * The first 4-bytes encode an [Int] describing the size of the blob.
- *
- * @return the OSC Blob.
- */
-public fun Source.readOscBlob(): ByteArray {
-  val size = readInt()
-  val blob = readByteArray(size)
-  skip(oscPadding(size).toLong())
-  return blob
-}
-
-/**
- * Removes 8 bytes from this source, interpreting them as OSC time tag.
- *
- * @return the OSC Time Tag.
- */
-public fun Source.readOscTimeTag(): OscTimeTag = OscTimeTag(
-  seconds = readUInt(),
-  fraction = readUInt()
-)

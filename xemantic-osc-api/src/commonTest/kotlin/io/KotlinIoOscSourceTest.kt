@@ -37,17 +37,27 @@ class KotlinIoOscSourceTest {
     }
   }
 
+  /**
+   * Test case taken from OSC protocol specification:
+   *
+   * https://opensoundcontrol.stanford.edu/spec-1_0-examples.html
+   */
   @Test
-  fun shouldReadSingleCharacterOscString() {
-    Source('a', ZERO, ZERO, ZERO).apply {
-      readOscString() shouldBe "a"
+  fun shouldReadOscStringAccordingToSpecExample1() {
+    Source('O', 'S', 'C', ZERO).apply {
+      readOscString() shouldBe "OSC"
       exhausted() shouldBe true
     }
   }
 
+  /**
+   * Test case taken from OSC protocol specification:
+   *
+   * https://opensoundcontrol.stanford.edu/spec-1_0-examples.html
+   */
   @Test
   fun shouldRead3CharacterOscString() {
-    Source('f', 'o', 'o', ZERO).apply {
+    Source('d', 'a', 't', 'a').apply {
       readOscString() shouldBe  "foo"
       exhausted() shouldBe true
     }
@@ -235,21 +245,21 @@ class KotlinIoOscSourceTest {
   }
 
   @Test
-  fun shouldReadImmediateTimeTag() {
-    Source(
-      0, 0, 0, 0, 0, 0, 0, 1
-    ).apply {
-      readOscTimeTag() shouldBe OscTimeTag.IMMEDIATE
-      exhausted() shouldBe true
-    }
-  }
-
-  @Test
   fun shouldReadSpecificTimeTag() {
     Source(
       0, 0, 0, 1, 0, 0, 0, 2
     ).apply {
       readOscTimeTag() shouldBe OscTimeTag(1u, 2u)
+      exhausted() shouldBe true
+    }
+  }
+
+  @Test
+  fun shouldReadImmediateTimeTag() {
+    Source(
+      0, 0, 0, 0, 0, 0, 0, 1
+    ).apply {
+      readOscTimeTag() shouldBe OscTimeTag.IMMEDIATE
       exhausted() shouldBe true
     }
   }
