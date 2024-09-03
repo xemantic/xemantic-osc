@@ -18,11 +18,12 @@
 
 package com.xemantic.osc.io
 
-import com.xemantic.osc.OscTimeTag
+import com.xemantic.osc.*
+import com.xemantic.osc.type.OscColor
+import com.xemantic.osc.type.OscMidiMessage
+import com.xemantic.osc.type.OscTimeTag
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
-import com.xemantic.osc.byteArrayOf
-import com.xemantic.osc.ZERO
 
 class KotlinIoOscSinkTest {
 
@@ -143,6 +144,46 @@ class KotlinIoOscSinkTest {
     } shouldBe byteArrayOf(0, 0, 0, 0, 0, 0, 0, 1)
   }
 
+  @Test
+  fun shouldWriteOscColor() {
+    writeToBytes {
+      writeOscColor(OscColor(1u, 2u, 3u, 4u))
+    } shouldBe byteArrayOf(1, 2, 3, 4)
+  }
 
+  @Test
+  fun shouldWriteOscMidiMessage() {
+    writeToBytes {
+      writeOscMidiMessage(OscMidiMessage(1u, 2u, 3u, 4u))
+    } shouldBe byteArrayOf(1, 2, 3, 4)
+  }
+
+  @Test
+  fun shouldWriteOscByte() {
+    writeToBytes {
+      writeOscByte(42)
+    } shouldBe byteArrayOf(42, 0, 0, 0)
+  }
+
+  @Test
+  fun shouldWriteOscUByte() {
+    writeToBytes {
+      writeOscUByte(42u)
+    } shouldBe byteArrayOf(42, 0, 0, 0)
+  }
+
+  @Test
+  fun shouldWriteOscShort() {
+    writeToBytes {
+      writeOscShort(42)
+    } shouldBe byteArrayOf(0, 42, 0, 0)
+  }
+
+  @Test
+  fun shouldWriteOscUShort() {
+    writeToBytes {
+      writeOscUShort(42u)
+    } shouldBe byteArrayOf(0, 42, 0, 0)
+  }
 
 }

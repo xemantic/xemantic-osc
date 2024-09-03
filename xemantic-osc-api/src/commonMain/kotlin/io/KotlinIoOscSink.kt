@@ -18,7 +18,9 @@
 
 package com.xemantic.osc.io
 
-import com.xemantic.osc.OscTimeTag
+import com.xemantic.osc.type.OscColor
+import com.xemantic.osc.type.OscMidiMessage
+import com.xemantic.osc.type.OscTimeTag
 import com.xemantic.osc.oscPadding
 import kotlinx.io.*
 
@@ -56,7 +58,7 @@ public fun Sink.writeOscString(string: String) {
  *
  * @param char the char to write.
  */
-public fun Sink.writeOscChar(char: Char) {
+public inline fun Sink.writeOscChar(char: Char) {
   writeInt(char.code)
 }
 
@@ -76,13 +78,72 @@ public fun Sink.writeOscBlob(blob: ByteArray) {
 }
 
 /**
- * Writes a [OscTimeTag] according to OSC protocol rules.
+ * Writes an [OscTimeTag] according to OSC protocol rules.
  *
  * @param timeTag a time tag.
  */
-public fun Sink.writeOscTimeTag(timeTag: OscTimeTag) {
-  writeUInt(timeTag.seconds)
-  writeUInt(timeTag.fraction)
+public inline fun Sink.writeOscTimeTag(timeTag: OscTimeTag) {
+  writeULong(timeTag.timeTag)
+}
+
+/**
+ * Writes an [OscColor] according to OSC protocol rules.
+ *
+ * @param color the color to write.
+ */
+public inline fun Sink.writeOscColor(color: OscColor) {
+  writeUInt(color.rgba)
+}
+
+/**
+ * Writes an [OscMidiMessage] according to OSC protocol rules.
+ *
+ * @param midiMessage the MIDI message to write.
+ */
+public inline fun Sink.writeOscMidiMessage(
+  midiMessage: OscMidiMessage
+) {
+  writeUInt(midiMessage.message)
+}
+
+/**
+ * Writes a byte according to OSC protocol rules.
+ *
+ * @param value the byte to write.
+ */
+public fun Sink.writeOscByte(value: Byte) {
+  writeByte(value)
+  writeOscPadding(1)
+}
+
+/**
+ * Writes an unsigned byte according to OSC protocol rules.
+ *
+ * @param value the unsigned byte to write.
+ */
+public fun Sink.writeOscUByte(value: UByte) {
+  writeUByte(value)
+  writeOscPadding(1)
+}
+
+/**
+ * Writes a short according to OSC protocol rules.
+ *
+ * @param value the short to write.
+ */
+public fun Sink.writeOscShort(value: Short) {
+  writeShort(value)
+  writeOscPadding(2)
+}
+
+/**
+ * Writes an unsigned short according to OSC protocol rules.
+ *
+ * @param value the unsigned short to write.
+ */
+public fun Sink.writeOscUShort(value: UShort) {
+  writeUShort(value)
+  writeOscPadding(2)
 }
 
 /**
