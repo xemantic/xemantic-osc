@@ -19,7 +19,7 @@
 package com.xemantic.osc.io
 
 import com.xemantic.osc.OscInputException
-import com.xemantic.osc.OscTimeTag
+import com.xemantic.osc.type.OscTimeTag
 import com.xemantic.osc.ZERO
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
@@ -57,8 +57,8 @@ class KotlinIoOscSourceTest {
    */
   @Test
   fun shouldRead3CharacterOscString() {
-    Source('d', 'a', 't', 'a').apply {
-      readOscString() shouldBe  "foo"
+    Source('d', 'a', 't', 'a', ZERO, ZERO, ZERO, ZERO).apply {
+      readOscString() shouldBe  "data"
       exhausted() shouldBe true
     }
   }
@@ -267,7 +267,7 @@ class KotlinIoOscSourceTest {
   @Test
   fun shouldNotReadOscTimeTagFromEmptySource() {
     shouldThrowWithMessage<EOFException>(
-      "Buffer doesn't contain required number of bytes (size: 0, required: 4)"
+      "Buffer doesn't contain required number of bytes (size: 0, required: 8)"
     ) {
       Buffer().readOscTimeTag()
     }
@@ -277,7 +277,7 @@ class KotlinIoOscSourceTest {
   fun shouldNotReadOscTimeTagFromInsufficientSource() {
     // size not fully specified
     shouldThrowWithMessage<EOFException>(
-      "Buffer doesn't contain required number of bytes (size: 1, required: 4)"
+      "Buffer doesn't contain required number of bytes (size: 1, required: 8)"
     ) {
       Source(1).readOscTimeTag()
     }
@@ -287,9 +287,41 @@ class KotlinIoOscSourceTest {
   fun shouldNotReadOscTimeTagFromInsufficientSecondIntSource() {
     // data not padded
     shouldThrowWithMessage<EOFException>(
-      "Buffer doesn't contain required number of bytes (size: 1, required: 4)"
+      "Buffer doesn't contain required number of bytes (size: 5, required: 8)"
     ) {
       Source(0, 0, 0, 1, 1).readOscTimeTag()
+    }
+  }
+
+  @Test
+  fun shouldReadOscByte() {
+    Source(42, 0, 0, 0).apply {
+      readOscByte() shouldBe 42
+      exhausted() shouldBe true
+    }
+  }
+
+  @Test
+  fun shouldReadOscUByte() {
+    Source(42, 0, 0, 0).apply {
+      readOscUByte() shouldBe 42u
+      exhausted() shouldBe true
+    }
+  }
+
+  @Test
+  fun shouldReadOscShort() {
+    Source(0, 42, 0, 0).apply {
+      readOscShort() shouldBe 42
+      exhausted() shouldBe true
+    }
+  }
+
+  @Test
+  fun shouldReadOscUShort() {
+    Source(0, 42, 0, 0).apply {
+      readOscUShort() shouldBe 42u
+      exhausted() shouldBe true
     }
   }
 

@@ -19,8 +19,10 @@
 package com.xemantic.osc.io
 
 import com.xemantic.osc.OscInputException
-import com.xemantic.osc.OscTimeTag
+import com.xemantic.osc.type.OscTimeTag
 import com.xemantic.osc.oscPadding
+import com.xemantic.osc.type.OscColor
+import com.xemantic.osc.type.OscMidiMessage
 import kotlinx.io.*
 
 /**
@@ -53,7 +55,7 @@ public fun Source.readOscString(): String {
  * @return the OSC Char.
  * @throws EOFException on unexpected input data.
  */
-public fun Source.readOscChar(): Char = readInt().toChar()
+public inline fun Source.readOscChar(): Char = readInt().toChar()
 
 /**
  * Removes data from this source interpreting them as OSC blob.
@@ -75,10 +77,72 @@ public fun Source.readOscBlob(): ByteArray {
  * @return the OSC Time Tag.
  * @throws EOFException on insufficient input data.
  */
-public fun Source.readOscTimeTag(): OscTimeTag = OscTimeTag(
-  seconds = readUInt(),
-  fraction = readUInt()
-)
+public inline fun Source.readOscTimeTag(): OscTimeTag =
+  OscTimeTag(readULong())
+
+/**
+ * Removes 4 bytes from this source, interpreting them as [OscColor] according to OSC protocol rules.
+ *
+ * @return the OSC RGBA color.
+ */
+public inline fun Source.readOscColor(): OscColor =
+  OscColor(readUInt())
+
+/**
+ * Removes 4 bytes from this source, interpreting them as [OscMidiMessage] according to OSC protocol rules.
+ *
+ * @return the OSC MIDI message.
+ */
+public inline fun Source.readOscMidiMessage(): OscMidiMessage =
+  OscMidiMessage(readUInt())
+
+/**
+ * Removes 4 bytes from this source, interpreting the first
+ * byte as a byte value according to OSC protocol rules.
+ *
+ * @return the byte.
+ */
+public fun Source.readOscByte(): Byte {
+  val value = readByte()
+  skip(3)
+  return value
+}
+
+/**
+ * Removes 4 bytes from this source, interpreting the
+ * first byte as an unsigned byte according to OSC protocol rules.
+ *
+ * @return the unsigned byte.
+ */
+public fun Source.readOscUByte(): UByte {
+  val value = readUByte()
+  skip(3)
+  return value
+}
+
+/**
+ * Removes 4 bytes from this source, interpreting the first
+ * 2 bytes as a short value according to OSC protocol rules.
+ *
+ * @return the short.
+ */
+public fun Source.readOscShort(): Short {
+  val value = readShort()
+  skip(2)
+  return value
+}
+
+/**
+ * Removes 4 bytes from this source, interpreting the first
+ * 2 bytes as an unsigned short value according to OSC protocol rules.
+ *
+ * @return the unsigned short.
+ */
+public fun Source.readOscUShort(): UShort {
+  val value = readUShort()
+  skip(2)
+  return value
+}
 
 /**
  * Creates a [Source] from supplied bytes.
