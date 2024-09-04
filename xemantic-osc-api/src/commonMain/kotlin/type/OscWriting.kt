@@ -119,10 +119,10 @@ public class OscWriter(
   /**
    * Writes an OSC MIDI message (Type Tag `m`).
    *
-   * @param midiMessage the color to write.
+   * @param message the color to write.
    */
-  public inline fun midiMessage(midiMessage: OscMidiMessage) {
-    sink.writeOscMidiMessage(midiMessage)
+  public inline fun midiMessage(message: OscMidiMessage) {
+    sink.writeOscMidiMessage(message)
   }
 
 }
