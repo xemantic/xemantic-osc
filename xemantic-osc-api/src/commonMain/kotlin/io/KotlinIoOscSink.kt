@@ -107,46 +107,6 @@ public inline fun Sink.writeOscMidiMessage(
 }
 
 /**
- * Writes a byte according to OSC protocol rules.
- *
- * @param value the byte to write.
- */
-public fun Sink.writeOscByte(value: Byte) {
-  writeByte(value)
-  writeOscPadding(1)
-}
-
-/**
- * Writes an unsigned byte according to OSC protocol rules.
- *
- * @param value the unsigned byte to write.
- */
-public fun Sink.writeOscUByte(value: UByte) {
-  writeUByte(value)
-  writeOscPadding(1)
-}
-
-/**
- * Writes a short according to OSC protocol rules.
- *
- * @param value the short to write.
- */
-public fun Sink.writeOscShort(value: Short) {
-  writeShort(value)
-  writeOscPadding(2)
-}
-
-/**
- * Writes an unsigned short according to OSC protocol rules.
- *
- * @param value the unsigned short to write.
- */
-public fun Sink.writeOscUShort(value: UShort) {
-  writeUShort(value)
-  writeOscPadding(2)
-}
-
-/**
  * Transforms a sequence of writes to given [Sink] into a [ByteArray].
  * Useful for testing.
  *
