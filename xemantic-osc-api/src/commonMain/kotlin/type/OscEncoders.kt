@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2023 Kazimierz Pogoda
+ * Copyright (C) 2024 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,11 +16,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.xemantic.osc.convert
+package com.xemantic.osc.type
 
 import com.xemantic.osc.OscEncoder
-import com.xemantic.osc.protocol.OscTimeTag
-import com.xemantic.osc.protocol.OscWriter
+import com.xemantic.osc.OscInputException
+import com.xemantic.osc.typeTag
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
@@ -44,8 +44,17 @@ private inline fun <reified T> listEncoder(
   crossinline elementEncoder: OscEncoder<T>
 ): OscEncoder<List<T>> = { list ->
   typeTag(CharArray(list.size) { elementTypeTag }.concatToString())
-  list.forEach { elementEncoder(OscWriter(output), it) }
+  list.forEach { elementEncoder(this, it) }
 }
+
+//https://www.cnmat.berkeley.edu/sites/default/files/attachments/2015_Dynamic_Message_Oriented_Middleware.pdf
+// TODO externalize all the default encoders
+public val intEncoder: OscEncoder<Int> = { typeTag("i"); int(it) }
+public val Int.oscEncoder: OscEncoder<Int> get() = intEncoder
+
+public val longEncoder: OscEncoder<Long> = { typeTag("h"); long(it) }
+
+public val midiMessageEncoder: OscEncoder<OscMidiMessage> = {  }
 
 public val DEFAULT_OSC_ENCODERS: Map<KType, OscEncoder<*>> = oscEncoders {
   encoder<Int> { typeTag("i"); int(it) }
@@ -57,6 +66,8 @@ public val DEFAULT_OSC_ENCODERS: Map<KType, OscEncoder<*>> = oscEncoders {
   encoder<Double> { typeTag("d"); double(it) }
   encoder<Char> { typeTag("c"); char(it) }
   encoder<Boolean> { typeTag(it.typeTag) }
+  encoder<OscMidiMessage> { typeTag("m"); midiMessage(it) }
+  encoder<OscColor> { typeTag("c"); color(it) }
   encoder<List<Int>>(listEncoder('i') { int(it) })
   encoder<List<Float>>(listEncoder('f') { float(it) })
   encoder<List<String>>(listEncoder('s') { string(it) })
@@ -70,4 +81,48 @@ public val DEFAULT_OSC_ENCODERS: Map<KType, OscEncoder<*>> = oscEncoders {
   }
 }
 
+@Suppress("UNCHECKED_CAST")
+public inline fun <reified T> defaultOscEncoder(): OscEncoder<T> =
+  (DEFAULT_OSC_ENCODERS[typeOf<T>()]
+    ?: throw IllegalArgumentException(
+      "No encoder for specified type: ${typeOf<T>()}"
+    )
+  ) as OscEncoder<T>
+
 internal val Boolean.typeTag: String get() = if (this) "T" else "F"
+
+
+public val genericEncoder: OscEncoder<List<Any>> = { anys ->
+  val typeTag = anys.map { any ->
+    when (any) {
+      is Int -> 'i'
+      is Float -> 'f'
+      is String -> 's'
+      is ByteArray -> 'b'
+      is Long -> 'h'
+      is OscTimeTag -> 't'
+      is Double -> 'd'
+      is Char -> 'c'
+      is Boolean -> any.typeTag[0]
+      else -> throw OscInputException(
+        "Unsupported type: ${any::class} in input list"
+      )
+    }
+  }.toCharArray().concatToString()
+  typeTag(typeTag)
+  anys.forEach { any ->
+    when (any) {
+      is Int -> int(any)
+      is Float -> float(any)
+      is String -> string(any)
+      is ByteArray -> blob(any)
+      is Long -> long(any)
+      is Double -> double(any)
+      is Char -> char(any)
+      is Boolean -> any.typeTag // This is arbitrary
+      else -> throw OscInputException(
+        "Unsupported type: ${any::class} in input list"
+      )
+    }
+  }
+}
