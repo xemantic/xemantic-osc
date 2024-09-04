@@ -98,12 +98,12 @@ public inline fun Sink.writeOscColor(color: OscColor) {
 /**
  * Writes an [OscMidiMessage] according to OSC protocol rules.
  *
- * @param midiMessage the MIDI message to write.
+ * @param message the MIDI message to write.
  */
 public inline fun Sink.writeOscMidiMessage(
-  midiMessage: OscMidiMessage
+  message: OscMidiMessage
 ) {
-  writeUInt(midiMessage.message)
+  writeUInt(message.message)
 }
 
 /**
