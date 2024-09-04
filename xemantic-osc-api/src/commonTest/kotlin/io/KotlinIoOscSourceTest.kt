@@ -293,36 +293,4 @@ class KotlinIoOscSourceTest {
     }
   }
 
-  @Test
-  fun shouldReadOscByte() {
-    Source(42, 0, 0, 0).apply {
-      readOscByte() shouldBe 42
-      exhausted() shouldBe true
-    }
-  }
-
-  @Test
-  fun shouldReadOscUByte() {
-    Source(42, 0, 0, 0).apply {
-      readOscUByte() shouldBe 42u
-      exhausted() shouldBe true
-    }
-  }
-
-  @Test
-  fun shouldReadOscShort() {
-    Source(0, 42, 0, 0).apply {
-      readOscShort() shouldBe 42
-      exhausted() shouldBe true
-    }
-  }
-
-  @Test
-  fun shouldReadOscUShort() {
-    Source(0, 42, 0, 0).apply {
-      readOscUShort() shouldBe 42u
-      exhausted() shouldBe true
-    }
-  }
-
 }

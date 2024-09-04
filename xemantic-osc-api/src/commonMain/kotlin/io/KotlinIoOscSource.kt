@@ -97,54 +97,6 @@ public inline fun Source.readOscMidiMessage(): OscMidiMessage =
   OscMidiMessage(readUInt())
 
 /**
- * Removes 4 bytes from this source, interpreting the first
- * byte as a byte value according to OSC protocol rules.
- *
- * @return the byte.
- */
-public fun Source.readOscByte(): Byte {
-  val value = readByte()
-  skip(3)
-  return value
-}
-
-/**
- * Removes 4 bytes from this source, interpreting the
- * first byte as an unsigned byte according to OSC protocol rules.
- *
- * @return the unsigned byte.
- */
-public fun Source.readOscUByte(): UByte {
-  val value = readUByte()
-  skip(3)
-  return value
-}
-
-/**
- * Removes 4 bytes from this source, interpreting the first
- * 2 bytes as a short value according to OSC protocol rules.
- *
- * @return the short.
- */
-public fun Source.readOscShort(): Short {
-  val value = readShort()
-  skip(2)
-  return value
-}
-
-/**
- * Removes 4 bytes from this source, interpreting the first
- * 2 bytes as an unsigned short value according to OSC protocol rules.
- *
- * @return the unsigned short.
- */
-public fun Source.readOscUShort(): UShort {
-  val value = readUShort()
-  skip(2)
-  return value
-}
-
-/**
  * Creates a [Source] from supplied bytes.
  * Useful for testing.
  *
