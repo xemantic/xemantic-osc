@@ -113,4 +113,23 @@ class OscTypeTagTest {
     }
   }
 
+  @Test
+  fun tStringToBooleanOscTypeTagShouldReturnTrue() {
+    "T".toBooleanOscTypeTag() shouldBe true
+  }
+
+  @Test
+  fun fStringToBooleanOscTypeTagShouldReturnTrue() {
+    "F".toBooleanOscTypeTag() shouldBe false
+  }
+
+  @Test
+  fun unsupportedStringToBooleanOscTypeTagShouldThrowException() {
+    shouldThrowWithMessage<OscException>(
+      "Invalid typeTag for representing Boolean: U"
+    ) {
+      "U".toBooleanOscTypeTag() shouldBe false
+    }
+  }
+
 }

@@ -56,8 +56,16 @@ public val Any.oscTypeTag: String get() = when (this) {
   is Char -> "c"
   is OscColor -> "r"
   is OscMidiMessage -> "m"
-  is List<*> -> "[${this.oscTypeTags()}]"
+  is List<*> -> "[${oscTypeTags()}]"
   else -> throw OscException(
     "Type unsupported in OSC: ${this::class}"
+  )
+}
+
+public fun String.toBooleanOscTypeTag(): Boolean = when (this) {
+  "T" -> true
+  "F" -> false
+  else -> throw OscException( // should never happen
+    "Invalid typeTag for representing Boolean: $this"
   )
 }
