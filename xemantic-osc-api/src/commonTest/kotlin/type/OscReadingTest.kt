@@ -100,20 +100,6 @@ class OscReadingTest {
   }
 
   @Test
-  fun shouldAssertTypeTag() {
-    OscReader(',', 'i', ZERO, ZERO).assertTypeTag("i")
-  }
-
-  @Test
-  fun shouldNotAssertOtherTypeTag() {
-    shouldThrowWithMessage<OscInputException>(
-      "Expected typeTag: 's', but was: 'i'"
-    ) {
-      OscReader(',', 'i', ZERO, ZERO).assertTypeTag("s")
-    }
-  }
-
-  @Test
   fun shouldCreateOscReaderPopulatedByOscWriter() {
     OscReader { string("foo") }.string() shouldBe "foo"
   }

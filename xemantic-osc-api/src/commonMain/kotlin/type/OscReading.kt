@@ -133,23 +133,6 @@ public fun OscReader.typeTag(): String {
 }
 
 /**
- * Reads the [typeTag] and asserts its value.
- *
- * @param typeTag the OSC Type Tag to match (without leading comma).
- * @throws OscInputException if type tag doesn't exist, is
- *          malformed or does not match the expected `typeTag`.
- * @see OscReader.typeTag
- */
-public fun OscReader.assertTypeTag(typeTag: String) {
-  val tag = typeTag()
-  if (tag != typeTag) {
-    throw OscInputException(
-      "Expected typeTag: '$typeTag', but was: '$tag'"
-    )
-  }
-}
-
-/**
  * Creates OSC reader populated with data from specified characters converted to bytes.
  * Useful for testing.
  *
