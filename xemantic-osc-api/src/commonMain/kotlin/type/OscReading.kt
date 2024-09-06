@@ -31,6 +31,7 @@ import kotlinx.io.*
  *
  * @param source the source to read from.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public class OscReader(
   @PublishedApi
   internal val source: Source

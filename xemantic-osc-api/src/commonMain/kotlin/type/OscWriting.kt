@@ -30,6 +30,7 @@ import kotlinx.io.*
  *
  * @param sink the data sink.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public class OscWriter(
   @PublishedApi
   internal val sink: Sink
