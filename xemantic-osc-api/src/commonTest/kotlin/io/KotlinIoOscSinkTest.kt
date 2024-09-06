@@ -18,10 +18,11 @@
 
 package com.xemantic.osc.io
 
-import com.xemantic.osc.*
 import com.xemantic.osc.type.OscColor
 import com.xemantic.osc.type.OscMidiMessage
 import com.xemantic.osc.type.OscTimeTag
+import com.xemantic.osc.util.ZERO
+import com.xemantic.osc.util.byteArrayOf
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 

@@ -20,7 +20,7 @@ package com.xemantic.osc.io
 
 import com.xemantic.osc.OscInputException
 import com.xemantic.osc.type.OscTimeTag
-import com.xemantic.osc.ZERO
+import com.xemantic.osc.util.ZERO
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
 import kotlinx.io.Buffer
