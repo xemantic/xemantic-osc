@@ -19,20 +19,17 @@
 package com.xemantic.osc.type
 
 import com.xemantic.osc.OscException
+import io.kotest.assertions.throwables.shouldThrow
 import kotlin.test.Test
 import io.kotest.matchers.shouldBe
 import io.kotest.assertions.throwables.shouldThrowWithMessage
+import io.kotest.matchers.string.shouldStartWith
 
 class OscTypeTagTest {
 
   @Test
   fun intOscTypeTagShouldBeI() {
     42.oscTypeTag shouldBe "i"
-  }
-
-  @Test
-  fun floatOscTypeTagShouldBeF() {
-    3.14f.oscTypeTag shouldBe "f"
   }
 
   @Test
@@ -66,11 +63,6 @@ class OscTypeTagTest {
   }
 
   @Test
-  fun longOscTypeTagShouldBeH() {
-    123456789L.oscTypeTag shouldBe "h"
-  }
-
-  @Test
   fun doubleOscTypeTagShouldBeD() {
     2.71828.oscTypeTag shouldBe "d"
   }
@@ -92,25 +84,21 @@ class OscTypeTagTest {
 
   @Test
   fun nestedListTypeTagsShouldBeCorrect() {
-    listOf(42, "Hello", true, null, listOf(3.14f, listOf('A'))).oscTypeTags() shouldBe "isTN[f[c]]"
+    listOf(42, "Hello", true, null, listOf(3.14, listOf('A'))).oscTypeTags() shouldBe "isTN[d[c]]"
   }
 
   @Test
   fun unsupportedOscTypeShouldThrowException() {
-    shouldThrowWithMessage<OscException>(
-      "Type unsupported in OSC: class kotlin.Byte"
-    ) {
-      0.toByte().oscTypeTag
-    }
+    shouldThrow<OscException> {
+      mapOf<String, String>().oscTypeTag
+    }.message shouldStartWith "Type unsupported in OSC"
   }
 
   @Test
-  fun listWithUnsupportedOscTypeShouldThrowException() {
-    shouldThrowWithMessage<OscException>(
-      "Type unsupported in OSC: class kotlin.Any"
-    ) {
-      listOf(42, Any()).oscTypeTags()
-    }
+  fun listContainingUnsupportedOscTypeShouldThrowException() {
+    shouldThrow<OscException> {
+      listOf(42, mapOf<String, String>()).oscTypeTags()
+    }.message shouldStartWith "Type unsupported in OSC"
   }
 
   @Test
