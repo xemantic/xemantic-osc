@@ -18,33 +18,54 @@
 
 kotlin {
 
+  applyDefaultHierarchyTemplate()
   explicitApi()
 
   jvm {}
 
+  // iOS
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
+
+  // Desktop
+  mingwX64()
+  linuxX64()
+  linuxArm64()
+  macosX64()
+  macosArm64()
+
+  // other apple
+  watchosSimulatorArm64()
+  watchosX64()
+  watchosArm32()
+  watchosArm64()
+  tvosSimulatorArm64()
+  tvosX64()
+  tvosArm64()
+  watchosDeviceArm64()
+
+  // other android
+  androidNativeArm32()
+  androidNativeArm64()
+  androidNativeX86()
+  androidNativeX64()
+
+  // Web
   js {
-    browser {}
+    browser()
+    nodejs()
   }
 
-  val hostOs = System.getProperty("os.name")
-  val isMingwX64 = hostOs.startsWith("Windows")
-  @Suppress("UNUSED_VARIABLE")
-  val nativeTarget = when {
-    hostOs == "Mac OS X" -> macosX64()
-    hostOs == "Linux" -> linuxX64()
-    isMingwX64 -> mingwX64()
-    else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+  @Suppress("OPT_IN_USAGE")
+  wasmJs {
+    // To build distributions for and run tests use one or several of:
+    browser()
+    nodejs()
+    d8()
   }
 
   sourceSets {
-
-    all {
-      languageSettings {
-        optIn("kotlin.ExperimentalStdlibApi")
-        optIn("kotlin.ExperimentalUnsignedTypes")
-        optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-      }
-    }
 
     commonMain {
       dependencies {
@@ -64,13 +85,37 @@ kotlin {
       }
     }
 
+    val jvmAndNativeMain by creating {
+      dependsOn(commonMain.get())
+    }
+
+    val jvmAndNativeTest by creating {
+      dependsOn(commonTest.get())
+      dependencies {
+        implementation(libs.kotlin.test)
+        implementation(libs.kotest.assertions.core)
+      }
+    }
+
+    jvmMain {
+      dependsOn(jvmAndNativeMain)
+    }
+
+    nativeMain {
+      dependsOn(jvmAndNativeMain)
+    }
+
     jvmTest  {
       dependencies {
         runtimeOnly(libs.log4j.slf4j2)
         runtimeOnly(libs.log4j.core)
         runtimeOnly(libs.jackson.databind)
-        runtimeOnly(libs.jackson.json)
+        runtimeOnly(libs.jackson.dataformat.yaml)
       }
+    }
+
+    nativeTest {
+      dependsOn(jvmAndNativeTest)
     }
 
   }
