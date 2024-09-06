@@ -19,7 +19,7 @@
 package com.xemantic.osc.type
 
 import com.xemantic.osc.OscInputException
-import com.xemantic.osc.ZERO
+import com.xemantic.osc.util.ZERO
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
