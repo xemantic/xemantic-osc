@@ -18,8 +18,8 @@
 
 package com.xemantic.osc.type
 
-import com.xemantic.osc.ZERO
-import com.xemantic.osc.writeOscToBytes
+import com.xemantic.osc.util.ZERO
+import com.xemantic.osc.util.writeOscToBytes
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -30,7 +30,7 @@ class OscWritingTest {
   fun shouldWriteString() {
     writeOscToBytes {
       string("OSC")
-    } shouldBe com.xemantic.osc.byteArrayOf('O', 'S', 'C', ZERO)
+    } shouldBe com.xemantic.osc.util.byteArrayOf('O', 'S', 'C', ZERO)
   }
 
   @Test
@@ -65,7 +65,7 @@ class OscWritingTest {
   fun shouldWriteChar() {
     writeOscToBytes {
       char('a')
-    } shouldBe com.xemantic.osc.byteArrayOf(ZERO, ZERO, ZERO, 'a')
+    } shouldBe com.xemantic.osc.util.byteArrayOf(ZERO, ZERO, ZERO, 'a')
   }
 
   @Test
@@ -101,19 +101,19 @@ class OscWritingTest {
 
     writeOscToBytes {
       typeTag("f")
-    } shouldBe com.xemantic.osc.byteArrayOf(',', 'f', ZERO, ZERO)
+    } shouldBe com.xemantic.osc.util.byteArrayOf(',', 'f', ZERO, ZERO)
 
     writeOscToBytes {
       typeTag("fi")
-    } shouldBe com.xemantic.osc.byteArrayOf(',', 'f', 'i', ZERO)
+    } shouldBe com.xemantic.osc.util.byteArrayOf(',', 'f', 'i', ZERO)
 
     writeOscToBytes {
       typeTag("fis")
-    } shouldBe com.xemantic.osc.byteArrayOf(',', 'f', 'i', 's', ZERO, ZERO, ZERO, ZERO)
+    } shouldBe com.xemantic.osc.util.byteArrayOf(',', 'f', 'i', 's', ZERO, ZERO, ZERO, ZERO)
 
     writeOscToBytes {
       typeTag("fisc")
-    } shouldBe com.xemantic.osc.byteArrayOf(',', 'f', 'i', 's', 'c', ZERO, ZERO, ZERO)
+    } shouldBe com.xemantic.osc.util.byteArrayOf(',', 'f', 'i', 's', 'c', ZERO, ZERO, ZERO)
 
   }
 
