@@ -18,9 +18,9 @@
 
 package com.xemantic.osc.type
 
-import com.xemantic.osc.ZERO
-import com.xemantic.osc.byteArrayOf
-import com.xemantic.osc.writeOscToBytes
+import com.xemantic.osc.util.ZERO
+import com.xemantic.osc.util.byteArrayOf
+import com.xemantic.osc.util.writeOscToBytes
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
