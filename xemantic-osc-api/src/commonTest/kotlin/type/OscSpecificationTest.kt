@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright  2023 Kazimierz Pogoda
+ * Copyright (C) 2024 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,12 +16,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.xemantic.osc
+package com.xemantic.osc.type
 
-import com.xemantic.osc.test.defaultOscDecoder
-import com.xemantic.osc.test.defaultOscEncoder
-import com.xemantic.osc.test.readOsc
-import com.xemantic.osc.test.toBytes
+import com.xemantic.osc.util.readBytesAsOsc
+import com.xemantic.osc.util.writeOscToBytes
 import io.kotest.matchers.floats.plusOrMinus
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -63,19 +61,19 @@ class OscSpecificationTest {
 
   @Test
   fun shouldWriteOscMessageAsOscillatorFrequencyBytes() {
-    toBytes {
+    writeOscToBytes {
       string("/oscillator/4/frequency")
-      defaultOscEncoder<Float>()(this, 440.0f)
+      oscEncoder<Float>()(this, 440.0f)
     } shouldBe oscillator4FrequencyBytes
   }
 
   @Test
   fun shouldReadOscillatorFrequencyBytesAsOscMessage() {
     // given
-    val decoder = defaultOscDecoder<Float>()
+    val decoder = oscDecoder<Float>()
 
     // when
-    val (address, value) = oscillator4FrequencyBytes.readOsc {
+    val (address, value) = oscillator4FrequencyBytes.readBytesAsOsc {
       val address = string()
       val value = decoder.decode(this)
       address to value
@@ -88,7 +86,7 @@ class OscSpecificationTest {
 
   @Test
   fun shouldWriteOscMessageAsFooBytes() {
-    toBytes {
+    writeOscToBytes {
       string("/foo")
       fooEncoder(this, Foo())
     } shouldBe fooBytes
@@ -97,7 +95,7 @@ class OscSpecificationTest {
   @Test
   fun shouldReadFooBytesAsOscMessage() {
     // when
-    val (address, value) = fooBytes.readOsc {
+    val (address, value) = fooBytes.readBytesAsOsc {
       val address = string()
       val value = fooDecoder.decode(this)
       address to value
@@ -111,7 +109,7 @@ class OscSpecificationTest {
       32bit float, which is causing rounding differences.
      */
     address shouldBe "/foo"
-    with (value) {
+    value.apply {
       firstInt shouldBe 1000
       secondInt shouldBe -1
       string shouldBe "hello"
