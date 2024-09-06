@@ -61,7 +61,7 @@ kotlin {
     // To build distributions for and run tests use one or several of:
     browser()
     nodejs()
-    d8()
+    //d8()
   }
 
   sourceSets {
