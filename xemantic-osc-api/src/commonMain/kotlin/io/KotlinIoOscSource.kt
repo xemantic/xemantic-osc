@@ -20,7 +20,6 @@ package com.xemantic.osc.io
 
 import com.xemantic.osc.OscInputException
 import com.xemantic.osc.type.OscTimeTag
-import com.xemantic.osc.oscPadding
 import com.xemantic.osc.type.OscColor
 import com.xemantic.osc.type.OscMidiMessage
 import kotlinx.io.*

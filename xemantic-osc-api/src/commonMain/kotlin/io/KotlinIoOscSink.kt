@@ -21,7 +21,6 @@ package com.xemantic.osc.io
 import com.xemantic.osc.type.OscColor
 import com.xemantic.osc.type.OscMidiMessage
 import com.xemantic.osc.type.OscTimeTag
-import com.xemantic.osc.oscPadding
 import kotlinx.io.*
 
 /**
@@ -42,7 +41,6 @@ public fun Sink.writeOscPadding(size: Int) {
  * The written data is `0`-terminated and padded.
  *
  * @param string the string to write.
- * @see oscPadding
  * @see writeOscPadding
  */
 public fun Sink.writeOscString(string: String) {
@@ -69,7 +67,6 @@ public inline fun Sink.writeOscChar(char: Char) {
  * and the data is also padded.
  *
  * @param blob the blob to write.
- * @see oscPadding
  * @see writeOscPadding
  */
 public fun Sink.writeOscBlob(blob: ByteArray) {

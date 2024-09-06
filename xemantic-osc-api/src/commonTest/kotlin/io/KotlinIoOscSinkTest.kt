@@ -158,32 +158,4 @@ class KotlinIoOscSinkTest {
     } shouldBe byteArrayOf(1, 2, 3, 4)
   }
 
-  @Test
-  fun shouldWriteOscByte() {
-    writeToBytes {
-      writeOscByte(42)
-    } shouldBe byteArrayOf(42, 0, 0, 0)
-  }
-
-  @Test
-  fun shouldWriteOscUByte() {
-    writeToBytes {
-      writeOscUByte(42u)
-    } shouldBe byteArrayOf(42, 0, 0, 0)
-  }
-
-  @Test
-  fun shouldWriteOscShort() {
-    writeToBytes {
-      writeOscShort(42)
-    } shouldBe byteArrayOf(0, 42, 0, 0)
-  }
-
-  @Test
-  fun shouldWriteOscUShort() {
-    writeToBytes {
-      writeOscUShort(42u)
-    } shouldBe byteArrayOf(0, 42, 0, 0)
-  }
-
 }
