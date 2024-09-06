@@ -1,6 +1,6 @@
 /*
  * xemantic-osc - Kotlin idiomatic and multiplatform OSC protocol support
- * Copyright (C) 2023 Kazimierz Pogoda
+ * Copyright (C) 2024 Kazimierz Pogoda
  *
  * This file is part of xemantic-osc.
  *
@@ -16,11 +16,12 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.xemantic.osc
+package com.xemantic.osc.type
 
 /**
  * See [Osc Message Examples](https://opensoundcontrol.stanford.edu/spec-1_0-examples.html).
  */
+@OptIn(ExperimentalUnsignedTypes::class)
 val oscillator4FrequencyBytes = ubyteArrayOf(
   0x2fu, 0x6fu, 0x73u, 0x63u,
   0x69u, 0x6cu, 0x6cu, 0x61u,
@@ -35,6 +36,7 @@ val oscillator4FrequencyBytes = ubyteArrayOf(
 /**
  * See [Osc Message Examples](https://opensoundcontrol.stanford.edu/spec-1_0-examples.html).
  */
+@OptIn(ExperimentalUnsignedTypes::class)
 val fooBytes = ubyteArrayOf(
   0x2fu, 0x66u, 0x6fu, 0x6fu,
   0x00u, 0x00u, 0x00u, 0x00u,
