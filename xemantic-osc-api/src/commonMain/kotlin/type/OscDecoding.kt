@@ -22,6 +22,9 @@ import com.xemantic.osc.*
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
+public inline fun <reified T> oscDecoder(): OscDecoder<T> =
+  (DEFAULT_OSC_DECODERS.resolve(typeOf<T>()))
+
 public val DEFAULT_OSC_DECODERS: Map<KType, OscDecoder<*>> = oscDecoders {
   decoder<Int>("i") { int() }
   decoder<Float>("f") { float() }
@@ -37,19 +40,6 @@ public val DEFAULT_OSC_DECODERS: Map<KType, OscDecoder<*>> = oscDecoders {
   decoder<OscMidiMessage>("m") { midiMessage() }
   decoder<List<*>> { tag -> readByTypeTag(tag.toCharArray()) }
 }
-
-@Suppress("UNCHECKED_CAST")
-public inline fun <reified T> oscDecoder(): OscDecoder<T> =
-  (DEFAULT_OSC_DECODERS[typeOf<T>()]
-    ?: throw IllegalArgumentException(
-      "No encoder for specified type: ${typeOf<T>()}"
-    )
-  ) as OscDecoder<T>
-
-public fun oscDecoders(
-  block: OscDecodersBuilder.() -> Unit
-): Map<KType, OscDecoder<*>> =
-  OscDecodersBuilder().apply(block).decoders
 
 public class OscDecoder<T>(
   public val typeTag: String? = null,
@@ -68,6 +58,12 @@ public class OscDecoder<T>(
 
 }
 
+public fun oscDecoders(
+  block: OscDecodersBuilder.() -> Unit
+): Map<KType, OscDecoder<*>> =
+  OscDecodersBuilder().apply(block).decoders
+
+
 public class OscDecodersBuilder {
 
   @PublishedApi
@@ -81,6 +77,14 @@ public class OscDecodersBuilder {
   }
 
 }
+
+@Suppress("UNCHECKED_CAST")
+@PublishedApi
+internal fun <T> Map<KType, OscDecoder<*>>.resolve(
+  type: KType,
+): OscDecoder<T> = (this[type] ?: throw IllegalArgumentException(
+  "No OscDecoder for type: $type"
+)) as OscDecoder<T>
 
 private fun OscReader.readByTypeTag(
   typeTag: CharArray,
