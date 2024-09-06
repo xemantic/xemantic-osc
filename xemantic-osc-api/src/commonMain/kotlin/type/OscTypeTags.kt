@@ -43,24 +43,7 @@ public fun List<*>.oscTypeTags(): String = joinToString(separator = "") {
  *
  * @throws OscException if this object's type cannot be represented in OSC protocol.
  */
-public val Any.oscTypeTag: String get() = when (this) {
-  is Int -> "i"
-  is Float -> "f"
-  is String -> "s"
-  is ByteArray -> "b"
-  is Boolean -> oscTypeTag
-  is OscImpulse -> "I"
-  is OscTimeTag -> "t"
-  is Long -> "h"
-  is Double -> "d"
-  is Char -> "c"
-  is OscColor -> "r"
-  is OscMidiMessage -> "m"
-  is List<*> -> "[${oscTypeTags()}]"
-  else -> throw OscException(
-    "Type unsupported in OSC: ${this::class}"
-  )
-}
+public expect val Any.oscTypeTag: String
 
 public fun String.toBooleanOscTypeTag(): Boolean = when (this) {
   "T" -> true
