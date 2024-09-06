@@ -18,8 +18,8 @@
 
 package com.xemantic.osc.util
 
-import com.xemantic.osc.OscDataPacket
-import com.xemantic.osc.OscPeer
+import com.xemantic.osc.packet.OscDataPacket
+import com.xemantic.osc.packet.OscPeer
 import com.xemantic.osc.type.OscReader
 import com.xemantic.osc.type.OscWriter
 import kotlinx.io.Buffer
@@ -74,6 +74,8 @@ public const val ZERO: Char = 0.toChar()
 /**
  * Creates a byte array out of supplied characters.
  * Useful for testng.
+ *
+ * @param chars the list of characters.
  */
 public fun byteArrayOf(
   vararg chars: Char
