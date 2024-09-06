@@ -80,7 +80,7 @@ kotlin {
         runtimeOnly(libs.log4j.slf4j2)
         runtimeOnly(libs.log4j.core)
         runtimeOnly(libs.jackson.databind)
-        runtimeOnly(libs.jackson.json)
+        runtimeOnly(libs.jackson.dataformat.yaml)
       }
     }
 

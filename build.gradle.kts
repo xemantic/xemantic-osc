@@ -28,7 +28,7 @@ plugins {
   `maven-publish`
   signing
   alias(libs.plugins.versions)
-  alias(libs.plugins.dokka) apply false
+  alias(libs.plugins.dokka)
   alias(libs.plugins.publish)
 }
 
