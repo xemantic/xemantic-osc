@@ -58,6 +58,7 @@ public fun Sink.writeOscString(string: String) {
  *
  * @param char the char to write.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Sink.writeOscChar(char: Char) {
   writeInt(char.code)
 }
@@ -82,6 +83,7 @@ public fun Sink.writeOscBlob(blob: ByteArray) {
  *
  * @param timeTag a time tag.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Sink.writeOscTimeTag(timeTag: OscTimeTag) {
   writeULong(timeTag.timeTag)
 }
@@ -91,6 +93,7 @@ public inline fun Sink.writeOscTimeTag(timeTag: OscTimeTag) {
  *
  * @param color the color to write.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Sink.writeOscColor(color: OscColor) {
   writeUInt(color.rgba)
 }
@@ -100,6 +103,7 @@ public inline fun Sink.writeOscColor(color: OscColor) {
  *
  * @param message the MIDI message to write.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Sink.writeOscMidiMessage(
   message: OscMidiMessage
 ) {

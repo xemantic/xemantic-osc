@@ -55,6 +55,7 @@ public fun Source.readOscString(): String {
  * @return the OSC Char.
  * @throws EOFException on unexpected input data.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Source.readOscChar(): Char = readInt().toChar()
 
 /**
@@ -77,6 +78,7 @@ public fun Source.readOscBlob(): ByteArray {
  * @return the OSC Time Tag.
  * @throws EOFException on insufficient input data.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Source.readOscTimeTag(): OscTimeTag =
   OscTimeTag(readULong())
 
@@ -85,6 +87,7 @@ public inline fun Source.readOscTimeTag(): OscTimeTag =
  *
  * @return the OSC RGBA color.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Source.readOscColor(): OscColor =
   OscColor(readUInt())
 
@@ -93,6 +96,7 @@ public inline fun Source.readOscColor(): OscColor =
  *
  * @return the OSC MIDI message.
  */
+@Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Source.readOscMidiMessage(): OscMidiMessage =
   OscMidiMessage(readUInt())
 
