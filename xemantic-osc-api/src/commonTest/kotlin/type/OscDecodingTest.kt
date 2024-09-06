@@ -45,8 +45,8 @@ class OscDecodingTest {
   fun shouldDecodeFloat() {
     oscDecoder<Float>().decode(OscReader {
       typeTag("f")
-      float(3.14f)
-    }) shouldBe 3.14f
+      float(3.0f)
+    }) shouldBe 3.0f
   }
 
   @Test
