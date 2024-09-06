@@ -20,6 +20,7 @@ package com.xemantic.osc.type
 
 import com.xemantic.osc.io.*
 import kotlinx.io.*
+import kotlin.jvm.JvmInline
 
 /**
  * The writer of an OSC data stream.
@@ -31,7 +32,8 @@ import kotlinx.io.*
  * @param sink the data sink.
  */
 @Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
-public class OscWriter(
+@JvmInline
+public value class OscWriter(
   @PublishedApi
   internal val sink: Sink
 ) {

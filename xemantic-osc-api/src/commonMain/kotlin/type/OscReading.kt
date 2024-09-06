@@ -21,6 +21,7 @@ package com.xemantic.osc.type
 import com.xemantic.osc.OscInputException
 import com.xemantic.osc.io.*
 import kotlinx.io.*
+import kotlin.jvm.JvmInline
 
 /**
  * The reader of an OSC data stream.
@@ -32,7 +33,8 @@ import kotlinx.io.*
  * @param source the source to read from.
  */
 @Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
-public class OscReader(
+@JvmInline
+public value class OscReader(
   @PublishedApi
   internal val source: Source
 ) {
