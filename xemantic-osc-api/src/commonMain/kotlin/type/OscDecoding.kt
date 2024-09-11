@@ -30,7 +30,7 @@ public val DEFAULT_OSC_DECODERS: Map<KType, OscDecoder<*>> = oscDecoders {
   decoder<Float>("f") { float() }
   decoder<String>("s") { string() }
   decoder<ByteArray>("b") { blob() }
-  decoder<Boolean> { tag -> tag.toBooleanOscTypeTag() }
+  decoder<Boolean> { typeTag.toBooleanOscTypeTag() }
   decoder<OscImpulse>("I") { OscImpulse }
   decoder<OscTimeTag>("t") { timeTag() }
   decoder<Long>("h") { long() }
@@ -38,23 +38,17 @@ public val DEFAULT_OSC_DECODERS: Map<KType, OscDecoder<*>> = oscDecoders {
   decoder<Char>("c") { char() }
   decoder<OscColor>("r") { color() }
   decoder<OscMidiMessage>("m") { midiMessage() }
-  decoder<List<*>> { tag -> readByTypeTag(tag.toCharArray()) }
+  decoder<Any?>("N") { null }
+  decoder<List<*>> { readByTypeTag(typeTag.toCharArray()) }
 }
 
 public class OscDecoder<T>(
   public val typeTag: String? = null,
-  private val block: OscReader.(typeTag: String) -> T
+  @PublishedApi
+  internal val block: OscReader.() -> T
 ) {
 
-  public fun decode(reader: OscReader): T {
-    val tag = reader.typeTag()
-    if (typeTag != null && tag != typeTag) {
-      throw OscInputException(
-        "Expected typeTag: '$typeTag', but was: '$tag'"
-      )
-    }
-    return block(reader, tag)
-  }
+  public inline fun decode(reader: OscReader): T = block(reader)
 
 }
 
@@ -71,9 +65,9 @@ public class OscDecodersBuilder {
 
   public inline fun <reified T> decoder(
     typeTag: String? = null,
-    noinline decode: OscReader.(typeTag: String) -> T
+    noinline block: OscReader.() -> T
   ) {
-    decoders[typeOf<T>()] = OscDecoder(typeTag, decode)
+    decoders[typeOf<T>()] = OscDecoder(typeTag, block)
   }
 
 }
