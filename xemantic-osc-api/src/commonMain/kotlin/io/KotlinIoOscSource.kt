@@ -25,6 +25,30 @@ import com.xemantic.osc.type.OscMidiMessage
 import kotlinx.io.*
 
 /**
+ * Removes bytes from this source interpreting them as OSC Type Tag.
+ * _Note: the initial comma described in the protocol is already stripped in returned string._
+ *
+ * See [Osc Type Tag String specification](https://ccrma.stanford.edu/groups/osc/spec-1_0.html#osc-type-tag-string)
+ *
+ * @return the OSC Type Tag String without leading comma character.
+ * @throws OscInputException if type tag doesn't exist or is malformed.
+ */
+public fun Source.readOscTypeTag(): String {
+  val head = readOscString()
+  if (head.isEmpty()) {
+    throw OscInputException(
+      "OSC type tag is empty"
+    )
+  }
+  if (head[0] != ',') {
+    throw OscInputException(
+      "OSC type tag must start with ,"
+    )
+  }
+  return head.substring(1)
+}
+
+/**
  * Removes bytes from this source interpreting them as OSC String.
  * The OSC String should be `0`-terminated and padded up to 4 bytes.
  *
@@ -98,31 +122,3 @@ public inline fun Source.readOscColor(): OscColor =
 @Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 public inline fun Source.readOscMidiMessage(): OscMidiMessage =
   OscMidiMessage(readUInt())
-
-/**
- * Creates a [Source] from supplied bytes.
- * Useful for testing.
- *
- * @param bytes the sequence of bytes.
- */
-public fun Source(
-  vararg bytes: Byte,
-): Source = Buffer().apply {
-  write(bytes)
-}
-
-/**
- * Creates a [Source] from supplied chars.
- * Useful for testing.
- *
- * @param chars the sequence of characters.
- */
-public fun Source(
-  vararg chars: Char
-): Source = Buffer().apply {
-  write(
-    chars.map {
-      it.code.toByte()
-    }.toByteArray()
-  )
-}

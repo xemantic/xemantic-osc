@@ -20,7 +20,9 @@ package com.xemantic.osc.io
 
 import com.xemantic.osc.OscInputException
 import com.xemantic.osc.type.OscTimeTag
+import com.xemantic.osc.util.Source
 import com.xemantic.osc.util.ZERO
+import com.xemantic.osc.util.emptySource
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
 import kotlinx.io.Buffer
@@ -28,6 +30,29 @@ import kotlinx.io.EOFException
 import kotlin.test.Test
 
 class KotlinIoOscSourceTest {
+
+  @Test
+  fun shouldReadOscTypeTag() {
+    Source(',', 'i', ZERO, ZERO).readOscTypeTag() shouldBe "i"
+  }
+
+  @Test
+  fun shouldNotReadEmptyOscTypeTag() {
+    shouldThrowWithMessage<OscInputException>(
+      "Cannot read OSC String, because byte sequence is not 0-terminated"
+    ) {
+      emptySource().readOscTypeTag()
+    }
+  }
+
+  @Test
+  fun shouldNotReadOscTypeTagWhichDoesNotStartWithComma() {
+    shouldThrowWithMessage<OscInputException>(
+      "OSC type tag must start with ,"
+    ) {
+      Source('i', ZERO, ZERO, ZERO).readOscTypeTag()
+    }
+  }
 
   @Test
   fun shouldReadEmptyOscString() {
