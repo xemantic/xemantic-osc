@@ -18,8 +18,8 @@
 
 package com.xemantic.osc.ableton.midi
 
-import com.xemantic.osc.OscPeer
 import com.xemantic.osc.ableton.Midi2AbletonNotesOscSender
+import com.xemantic.osc.packet.OscPeer
 import com.xemantic.osc.test.TestOscOutput
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.advanceUntilIdle

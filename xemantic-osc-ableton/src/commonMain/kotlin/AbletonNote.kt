@@ -18,7 +18,7 @@
 
 package com.xemantic.osc.ableton
 
-import com.xemantic.osc.OscPeer
+import com.xemantic.osc.packet.OscPeer
 
 /**
  * A note received from

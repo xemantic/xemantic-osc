@@ -19,8 +19,8 @@
 package com.xemantic.osc.ableton
 
 import com.xemantic.osc.OscInput
-import com.xemantic.osc.OscMessage
-import com.xemantic.osc.OscPeer
+import com.xemantic.osc.packet.OscMessage
+import com.xemantic.osc.packet.OscPeer
 import kotlinx.coroutines.flow.*
 import com.xemantic.osc.route
 import io.github.oshai.kotlinlogging.KotlinLogging
