@@ -22,33 +22,33 @@ kotlin {
 
   jvm {}
 
-  // iOS
-  iosX64()
-  iosArm64()
-  iosSimulatorArm64()
-
-  // Desktop
-  mingwX64()
-  linuxX64()
-  linuxArm64()
-  macosX64()
-  macosArm64()
-
-  // other apple
-  watchosSimulatorArm64()
-  watchosX64()
-  watchosArm32()
-  watchosArm64()
-  tvosSimulatorArm64()
-  tvosX64()
-  tvosArm64()
-  watchosDeviceArm64()
-
-  // other android
-  androidNativeArm32()
-  androidNativeArm64()
-  androidNativeX86()
-  androidNativeX64()
+//  // iOS
+//  iosX64()
+//  iosArm64()
+//  iosSimulatorArm64()
+//
+//  // Desktop
+//  mingwX64()
+    linuxX64()
+//  linuxArm64()
+//  macosX64()
+//  macosArm64()
+//
+//  // other apple
+//  watchosSimulatorArm64()
+//  watchosX64()
+//  watchosArm32()
+//  watchosArm64()
+//  tvosSimulatorArm64()
+//  tvosX64()
+//  tvosArm64()
+//  watchosDeviceArm64()
+//
+//  // other android
+//  androidNativeArm32()
+//  androidNativeArm64()
+//  androidNativeX86()
+//  androidNativeX64()
 
   // Web
   js {
